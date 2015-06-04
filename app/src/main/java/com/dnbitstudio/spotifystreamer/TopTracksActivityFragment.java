@@ -39,7 +39,7 @@ public class TopTracksActivityFragment extends Fragment {
 
         // TODO remove fake data
         int count = 1;
-        for (int i = 0; i < 33; i++) {
+        for (int i = 0; i < 10; i++) {
             values.add(artist + "." + count++);
         }
 

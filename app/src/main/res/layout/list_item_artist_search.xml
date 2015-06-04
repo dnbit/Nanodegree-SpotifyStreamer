@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/list_item_artist_search_textview"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list_item_artist_search_rootview"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="?android:listPreferredItemHeight" />
+    android:minHeight="?android:listPreferredItemHeight">
+
+    <ImageView
+        android:id="@+id/list_item_artist_search_thumbnail"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="8dp"/>
+
+    <TextView
+        android:id="@+id/list_item_artist_search_name"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:layout_toRightOf="@id/list_item_artist_search_thumbnail"
+        android:gravity="center_vertical" />
+
+</RelativeLayout>
