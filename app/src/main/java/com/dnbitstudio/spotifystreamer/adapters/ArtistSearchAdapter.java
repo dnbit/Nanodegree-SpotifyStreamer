@@ -12,32 +12,65 @@ import com.dnbitstudio.spotifystreamer.R;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import kaaes.spotify.webapi.android.models.Artist;
+import kaaes.spotify.webapi.android.models.Image;
 
-public class ArtistSearchAdapter extends ArrayAdapter<Artist>
-{
+public class ArtistSearchAdapter extends ArrayAdapter<Artist> {
+
+    private final String LOG_TAG = this.getClass().getSimpleName();
+
     private final Context context;
+    private final int layoutResource;
     private final ArrayList<Artist> values;
 
-    public ArtistSearchAdapter(Context context, int layout, int view, ArrayList<Artist> values) {
-        super(context, layout, view, values);
+    private final LayoutInflater mInflater;
+    public static final int DEFAULT_THUMBNAIL = R.mipmap.ic_launcher;
+
+    public ArtistSearchAdapter(Context context, int layoutResource, ArrayList<Artist> values) {
+        super(context, layoutResource, values);
         this.context = context;
+        this.layoutResource = layoutResource;
         this.values = values;
+        this.mInflater = (LayoutInflater) context
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        LayoutInflater inflater = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View rowView = inflater.inflate(R.layout.list_item_artist_search, parent, false);
-        TextView artistName = (TextView) rowView.findViewById(R.id.list_item_artist_search_name);
-        ImageView thumbnail = (ImageView) rowView.findViewById(R.id.list_item_artist_search_thumbnail);
+        // ViewHolder pattern
+        ViewHolder holder;
+        if (convertView == null) {
+            convertView = mInflater.inflate(layoutResource, null);
 
-        artistName.setText(values.get(position).name);
-        if(values.get(position).images.size() > 0) {
-            Picasso.with(context).load(values.get(position).images.get(0).url).into(thumbnail);
+            holder = new ViewHolder();
+            holder.image = (ImageView) convertView.findViewById(R.id.list_item_artist_search_thumbnail);
+            holder.text = (TextView) convertView.findViewById(R.id.list_item_artist_search_name);
+
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
         }
-        return rowView;
+
+        holder.text.setText(values.get(position).name);
+
+        List<Image> images = values.get(position).images;
+        int listSize = images.size();
+        if (listSize > 0) {
+            // we have removed the too small ones
+            // and the latest is the smallest
+            // so we just need the latest
+            Picasso.with(context).load(images.get(listSize - 1).url).into(holder.image);
+        } else {
+            // default thumbnail
+            Picasso.with(context).load(DEFAULT_THUMBNAIL).into(holder.image);
+        }
+        return convertView;
+    }
+
+    private static class ViewHolder {
+        public ImageView image;
+        public TextView text;
     }
 }

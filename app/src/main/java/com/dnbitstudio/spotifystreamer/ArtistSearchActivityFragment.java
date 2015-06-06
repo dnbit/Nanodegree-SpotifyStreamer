@@ -4,61 +4,72 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.dnbitstudio.spotifystreamer.adapters.ArtistSearchAdapter;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
+import kaaes.spotify.webapi.android.models.Image;
 
 
 /**
- * A placeholder fragment containing a simple view.
+ * A fragment for the artist search
  */
-public class ArtistSearchActivityFragment extends Fragment {
+public class ArtistSearchActivityFragment extends Fragment implements android.support.v7.widget.SearchView.OnQueryTextListener,
+        android.support.v7.widget.SearchView.OnCloseListener
+{
+    private final String LOG_TAG = this.getClass().getSimpleName();
 
-    public ArtistSearchAdapter mArtistSearchAdapter;
+    private ArtistSearchAdapter mArtistSearchAdapter;
+    private SearchView searchView;
+    private ListView listView;
 
-    public ArtistSearchActivityFragment() {
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        FetchArtistSearchTask searchTask = new FetchArtistSearchTask();
-        searchTask.execute();
+    public ArtistSearchActivityFragment()
+    {
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             Bundle savedInstanceState)
+    {
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
+
+        searchView = (SearchView) rootView.findViewById(R.id.search_artist_name);
+        searchView.setQueryHint(getResources().getString(R.string.searchview_hint));
+        searchView.setIconifiedByDefault(false);
+        searchView.setOnQueryTextListener(this);
+        searchView.setOnCloseListener(this);
 
         mArtistSearchAdapter = new ArtistSearchAdapter(getActivity(),
                 R.layout.list_item_artist_search,
-                R.id.list_item_artist_search_rootview,
                 new ArrayList<Artist>());
 
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_artist_search);
+        listView = (ListView) rootView.findViewById(R.id.listview_artist_search);
         listView.setAdapter(mArtistSearchAdapter);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView tv = (TextView) view.findViewById(R.id.list_item_artist_search_name);
-
-                String artist = tv.getText().toString();
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                String artistID = mArtistSearchAdapter.getItem(position).id;
                 Intent intent = new Intent(getActivity(), TopTracksActivity.class);
-                intent.putExtra("artist", artist);
+                intent.putExtra(TopTracksActivityFragment.ARTIST_ID, artistID);
+
                 startActivity(intent);
             }
         });
@@ -66,24 +77,120 @@ public class ArtistSearchActivityFragment extends Fragment {
         return rootView;
     }
 
-    public class FetchArtistSearchTask extends AsyncTask<String, Void, ArtistsPager> {
+    @Override
+    public void onStart()
+    {
+        super.onStart();
+        // Cache default img
+        // Note: It is safe to invoke fetch from any thread
+        Picasso.with(getActivity()).load(ArtistSearchAdapter.DEFAULT_THUMBNAIL).fetch();
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String s)
+    {
+        if (s.length() < 1)
+        {
+            mArtistSearchAdapter.clear();
+            listView.setSelectionAfterHeaderView();
+        } else
+        {
+            performSearch(s);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String s)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean onClose()
+    {
+        return false;
+    }
+
+    public void performSearch(String artist)
+    {
+        new FetchArtistSearchTask().execute(artist);
+    }
+
+    public class FetchArtistSearchTask extends AsyncTask<String, Void, List<Artist>>
+    {
+
+        public static final int MIN_IMAGE_SIZE_SMALL = 200;
 
         @Override
-        protected ArtistsPager doInBackground(String... params) {
+        protected List<Artist> doInBackground(String... params)
+        {
+            if (params == null || params.length == 0)
+            {
+                return null;
+            }
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
 
-            return spotify.searchArtists("adele");
+            ArtistsPager artistsPager = spotify.searchArtists(params[0]);
+
+            if (artistsPager != null && artistsPager.artists != null &&
+                    artistsPager.artists.items != null)
+            {
+                List<Artist> artists = artistsPager.artists.items;
+                for (Artist artist : artists)
+                {
+                    List<Image> images = artist.images;
+                    if (images.size() == 0)
+                    {
+                        continue;
+                    }
+
+                    ListIterator iterator = images.listIterator(images.size());
+                    // We want the smallest with width >= 200
+                    // We remove smaller than this to ensure it is
+                    // always at size()-1
+                    while (iterator.hasPrevious())
+                    {
+                        Image image = (Image) iterator.previous();
+                        if (iterator.hasPrevious())
+                        {
+                            if (image.width < MIN_IMAGE_SIZE_SMALL)
+                            {
+                                iterator.remove();
+                            } else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    // Cache images
+                    Picasso.with(getActivity()).load(images.get(images.size() - 1).url).fetch();
+                }
+
+                return artists;
+            }
+
+            return null;
         }
 
         @Override
-        protected void onPostExecute(ArtistsPager results) {
-            if (results != null)
+        protected void onPostExecute(List<Artist> results)
+        {
+            if (results != null && results.size() > 0)
             {
+                searchView.clearFocus();
                 mArtistSearchAdapter.clear();
-                for (Artist artist : results.artists.items) {
+                for (Artist artist : results)
+                {
                     mArtistSearchAdapter.add(artist);
                 }
+                listView.setSelectionAfterHeaderView();
+            } else
+            {
+                String message = getResources().getString(R.string.refine_search);
+                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
             }
         }
     }

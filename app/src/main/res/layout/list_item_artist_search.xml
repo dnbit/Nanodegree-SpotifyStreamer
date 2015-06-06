@@ -7,17 +7,20 @@
 
     <ImageView
         android:id="@+id/list_item_artist_search_thumbnail"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_margin="8dp"/>
+        android:layout_margin="16dp"
+        android:contentDescription="@string/description_artist_thumbnail"/>
 
     <TextView
         android:id="@+id/list_item_artist_search_name"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="96dp"
         android:layout_toRightOf="@id/list_item_artist_search_thumbnail"
+        android:layout_toEndOf="@id/list_item_artist_search_thumbnail"
         android:gravity="center_vertical" />
 
 </RelativeLayout>
