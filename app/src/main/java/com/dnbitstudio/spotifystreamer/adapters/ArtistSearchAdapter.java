@@ -1,6 +1,8 @@
 package com.dnbitstudio.spotifystreamer.adapters;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +19,7 @@ import java.util.List;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Image;
 
-public class ArtistSearchAdapter extends ArrayAdapter<Artist>
+public class ArtistSearchAdapter extends ArrayAdapter<Artist> implements Parcelable
 {
 
     private final String LOG_TAG = this.getClass().getSimpleName();
@@ -74,6 +76,18 @@ public class ArtistSearchAdapter extends ArrayAdapter<Artist>
             Picasso.with(context).load(DEFAULT_THUMBNAIL).into(holder.image);
         }
         return convertView;
+    }
+
+    @Override
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags)
+    {
+
     }
 
     private static class ViewHolder

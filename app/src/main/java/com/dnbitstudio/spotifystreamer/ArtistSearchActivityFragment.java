@@ -34,6 +34,7 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
 
+    private static final String ADAPTER_KEY = "adapter";
     private ArtistSearchAdapter adapter;
     private SearchView searchView;
     private ListView listView;
@@ -54,9 +55,16 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
 
-        adapter = new ArtistSearchAdapter(getActivity(),
-                R.layout.list_item_artist_search,
-                new ArrayList<Artist>());
+        if(savedInstanceState != null)
+        {
+            adapter = savedInstanceState.getParcelable(ADAPTER_KEY);
+        }
+        else
+        {
+            adapter = new ArtistSearchAdapter(getActivity(),
+                    R.layout.list_item_artist_search,
+                    new ArrayList<Artist>());
+        }
 
         listView = (ListView) rootView.findViewById(R.id.listview_artist_search);
         listView.setAdapter(adapter);
@@ -84,6 +92,13 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
         // Cache default img
         // Note: It is safe to invoke fetch from any thread
         Picasso.with(getActivity()).load(ArtistSearchAdapter.DEFAULT_THUMBNAIL).fetch();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(ADAPTER_KEY, adapter);
     }
 
     @Override

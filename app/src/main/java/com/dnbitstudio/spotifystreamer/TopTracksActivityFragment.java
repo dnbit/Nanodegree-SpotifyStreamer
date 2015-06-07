@@ -34,10 +34,11 @@ import kaaes.spotify.webapi.android.models.Tracks;
 public class TopTracksActivityFragment extends Fragment
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
+    private static final String ADAPTER_KEY = "adapter";
     public static final String ARTIST_ID = "artistID";
 
-    public TopTracksAdapter adapter;
-    public String artistID = "";
+    private TopTracksAdapter adapter;
+    private String artistID = "";
 
     public TopTracksActivityFragment()
     {
@@ -55,9 +56,16 @@ public class TopTracksActivityFragment extends Fragment
             artistID = intent.getStringExtra(ARTIST_ID);
         }
 
-        adapter = new TopTracksAdapter(getActivity(),
-                R.layout.list_item_top_tracks,
-                new ArrayList<Track>());
+        if (savedInstanceState != null)
+        {
+            adapter = savedInstanceState.getParcelable(ADAPTER_KEY);
+        }
+        else
+        {
+            adapter = new TopTracksAdapter(getActivity(),
+                    R.layout.list_item_top_tracks,
+                    new ArrayList<Track>());
+        }
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_top_artist);
         listView.setAdapter(adapter);
@@ -80,6 +88,13 @@ public class TopTracksActivityFragment extends Fragment
     {
         super.onStart();
         performSearch(artistID);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(ADAPTER_KEY, adapter);
     }
 
     public void performSearch(String artistID)
@@ -164,9 +179,10 @@ public class TopTracksActivityFragment extends Fragment
             if (results != null && results.size() > 0)
             {
                 adapter.clear();
-                for (Track track : results)
+                // Probably unnecessary but just in case
+                for (int i = 0; i < 10; i++)
                 {
-                    adapter.add(track);
+                    adapter.add(results.get(i));
                 }
             }
         }
