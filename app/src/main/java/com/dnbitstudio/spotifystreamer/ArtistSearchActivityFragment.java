@@ -34,7 +34,7 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
 
-    private ArtistSearchAdapter mArtistSearchAdapter;
+    private ArtistSearchAdapter adapter;
     private SearchView searchView;
     private ListView listView;
 
@@ -49,24 +49,24 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
 
         searchView = (SearchView) rootView.findViewById(R.id.search_artist_name);
-        searchView.setQueryHint(getResources().getString(R.string.searchview_hint));
+        searchView.setQueryHint(getString(R.string.searchview_hint));
         searchView.setIconifiedByDefault(false);
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
 
-        mArtistSearchAdapter = new ArtistSearchAdapter(getActivity(),
+        adapter = new ArtistSearchAdapter(getActivity(),
                 R.layout.list_item_artist_search,
                 new ArrayList<Artist>());
 
         listView = (ListView) rootView.findViewById(R.id.listview_artist_search);
-        listView.setAdapter(mArtistSearchAdapter);
+        listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                String artistID = mArtistSearchAdapter.getItem(position).id;
+                String artistID = adapter.getItem(position).id;
                 Intent intent = new Intent(getActivity(), TopTracksActivity.class);
                 intent.putExtra(TopTracksActivityFragment.ARTIST_ID, artistID);
 
@@ -87,15 +87,15 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
     }
 
     @Override
-    public boolean onQueryTextSubmit(String s)
+    public boolean onQueryTextSubmit(String artistName)
     {
-        if (s.length() < 1)
+        if (artistName.length() < 1)
         {
-            mArtistSearchAdapter.clear();
+            adapter.clear();
             listView.setSelectionAfterHeaderView();
         } else
         {
-            performSearch(s);
+            performSearch(artistName);
         }
         return true;
     }
@@ -114,7 +114,13 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
 
     public void performSearch(String artist)
     {
-        new FetchArtistSearchTask().execute(artist);
+        if (CommonHelper.isNetworkConnected(getActivity()))
+        {
+            new FetchArtistSearchTask().execute(artist);
+        } else
+        {
+            Toast.makeText(getActivity(), getString(R.string.network_unavailable), Toast.LENGTH_SHORT).show();
+        }
     }
 
     public class FetchArtistSearchTask extends AsyncTask<String, Void, List<Artist>>
@@ -141,37 +147,33 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
                 for (Artist artist : artists)
                 {
                     List<Image> images = artist.images;
-                    if (images.size() == 0)
+                    if (images.size() > 0)
                     {
-                        continue;
-                    }
-
-                    ListIterator iterator = images.listIterator(images.size());
-                    // We want the smallest with width >= 200
-                    // We remove smaller than this to ensure it is
-                    // always at size()-1
-                    while (iterator.hasPrevious())
-                    {
-                        Image image = (Image) iterator.previous();
-                        if (iterator.hasPrevious())
+                        ListIterator iterator = images.listIterator(images.size());
+                        // We want the smallest with width >= 200
+                        // We remove smaller than this to ensure it is
+                        // always at size()-1
+                        while (iterator.hasPrevious())
                         {
-                            if (image.width < MIN_IMAGE_SIZE_SMALL)
+                            Image image = (Image) iterator.previous();
+                            if (iterator.hasPrevious())
                             {
-                                iterator.remove();
-                            } else
-                            {
-                                break;
+                                if (image.width < MIN_IMAGE_SIZE_SMALL)
+                                {
+                                    iterator.remove();
+                                } else
+                                {
+                                    break;
+                                }
                             }
                         }
+
+                        // Cache images
+                        Picasso.with(getActivity()).load(images.get(images.size() - 1).url).fetch();
                     }
-
-                    // Cache images
-                    Picasso.with(getActivity()).load(images.get(images.size() - 1).url).fetch();
                 }
-
                 return artists;
             }
-
             return null;
         }
 
@@ -181,15 +183,15 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
             if (results != null && results.size() > 0)
             {
                 searchView.clearFocus();
-                mArtistSearchAdapter.clear();
+                adapter.clear();
                 for (Artist artist : results)
                 {
-                    mArtistSearchAdapter.add(artist);
+                    adapter.add(artist);
                 }
                 listView.setSelectionAfterHeaderView();
             } else
             {
-                String message = getResources().getString(R.string.refine_search);
+                String message = getString(R.string.refine_search);
                 Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
             }
         }

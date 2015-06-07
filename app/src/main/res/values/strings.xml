@@ -5,4 +5,6 @@
     <string name="searchview_hint">Type artist name</string>
     <string name="refine_search">No artist found. Please refine search</string>
     <string name="description_artist_thumbnail">Artist thumbnail</string>
+    <string name="description_album_thumbnail">Album thumbnail</string>
+    <string name="network_unavailable">Network connection not available</string>
 </resources>

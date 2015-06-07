@@ -9,57 +9,65 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dnbitstudio.spotifystreamer.adapters.TopTracksAdapter;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 
 
 /**
- * A placeholder fragment containing a simple view.
+ * A fragment for the top tracks
  */
-public class TopTracksActivityFragment extends Fragment {
-
+public class TopTracksActivityFragment extends Fragment
+{
     private final String LOG_TAG = this.getClass().getSimpleName();
     public static final String ARTIST_ID = "artistID";
-    public String artistID="";
 
-    public TopTracksAdapter mTopTracksAdapter;
+    public TopTracksAdapter adapter;
+    public String artistID = "";
 
-    public TopTracksActivityFragment() {
+    public TopTracksActivityFragment()
+    {
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             Bundle savedInstanceState)
+    {
         View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
 
         Intent intent = getActivity().getIntent();
-        if (intent != null && intent.getStringExtra(ARTIST_ID) != null){
+        if (intent != null && intent.getStringExtra(ARTIST_ID) != null)
+        {
             artistID = intent.getStringExtra(ARTIST_ID);
         }
 
-        mTopTracksAdapter = new TopTracksAdapter(getActivity(),
+        adapter = new TopTracksAdapter(getActivity(),
                 R.layout.list_item_top_tracks,
                 new ArrayList<Track>());
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_top_artist);
-        listView.setAdapter(mTopTracksAdapter);
+        listView.setAdapter(adapter);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String message = mTopTracksAdapter.getItem(position).name;
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                String message = adapter.getItem(position).name;
                 Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
             }
         });
@@ -68,16 +76,36 @@ public class TopTracksActivityFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
+    public void onStart()
+    {
         super.onStart();
-        new FetchTopTracksTask().execute(artistID);
+        performSearch(artistID);
     }
 
-    public class FetchTopTracksTask extends AsyncTask<String, Void, Tracks>
+    public void performSearch(String artistID)
     {
+        if (CommonHelper.isNetworkConnected(getActivity()))
+        {
+            new FetchTopTracksTask().execute(artistID);
+        } else
+        {
+            Toast.makeText(getActivity(), getString(R.string.network_unavailable), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public class FetchTopTracksTask extends AsyncTask<String, Void, List<Track>>
+    {
+        public static final int MIN_IMAGE_SIZE_SMALL = 200;
 
         @Override
-        protected Tracks doInBackground(String... params) {
+        protected List<Track> doInBackground(String... params)
+        {
+
+            if (params == null || params.length == 0)
+            {
+                return null;
+            }
+
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
 
@@ -89,17 +117,56 @@ public class TopTracksActivityFragment extends Fragment {
             }
 
             map.put("country", country);
-            return spotify.getArtistTopTrack(params[0], map);
+
+            Tracks tracks = spotify.getArtistTopTrack(params[0], map);
+
+            if (tracks != null && tracks.tracks != null
+                    && tracks.tracks.size() > 0)
+            {
+                List<Track> actualTracks = tracks.tracks;
+                for (Track track : actualTracks)
+                {
+                    if (track.album != null && track.album.images != null
+                            && track.album.images.size() > 0)
+                    {
+                        List<Image> images = track.album.images;
+
+                        ListIterator iterator = images.listIterator(images.size());
+                        // We want the smallest with width >= 200
+                        // We remove smaller than this to ensure it is
+                        // always at size()-1
+                        while (iterator.hasPrevious())
+                        {
+                            Image image = (Image) iterator.previous();
+                            if (iterator.hasPrevious())
+                            {
+                                if (image.width < MIN_IMAGE_SIZE_SMALL)
+                                {
+                                    iterator.remove();
+                                } else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        // Cache images
+                        Picasso.with(getActivity()).load(images.get(images.size() - 1).url).fetch();
+                    }
+                }
+                return actualTracks;
+            }
+            return null;
         }
 
         @Override
-        protected void onPostExecute(Tracks results) {
-            if (results != null && results.tracks.size() > 0)
+        protected void onPostExecute(List<Track> results)
+        {
+            if (results != null && results.size() > 0)
             {
-                mTopTracksAdapter.clear();
-                for (Track track : results.tracks)
+                adapter.clear();
+                for (Track track : results)
                 {
-                    mTopTracksAdapter.add(track);
+                    adapter.add(track);
                 }
             }
         }
