@@ -1,8 +1,6 @@
 package com.dnbitstudio.spotifystreamer.adapters;
 
 import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,27 +9,23 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.dnbitstudio.spotifystreamer.R;
+import com.dnbitstudio.spotifystreamer.models.CustomArtist;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Image;
-
-public class ArtistSearchAdapter extends ArrayAdapter<Artist> implements Parcelable
+public class ArtistSearchAdapter extends ArrayAdapter<CustomArtist>
 {
-
     private final String LOG_TAG = this.getClass().getSimpleName();
 
     private final Context context;
     private final int layoutResource;
-    private final ArrayList<Artist> values;
+    private final ArrayList<CustomArtist> values;
 
     private final LayoutInflater inflater;
     public static final int DEFAULT_THUMBNAIL = R.mipmap.ic_launcher;
 
-    public ArtistSearchAdapter(Context context, int layoutResource, ArrayList<Artist> values)
+    public ArtistSearchAdapter(Context context, int layoutResource, ArrayList<CustomArtist> values)
     {
         super(context, layoutResource, values);
         this.context = context;
@@ -60,34 +54,19 @@ public class ArtistSearchAdapter extends ArrayAdapter<Artist> implements Parcela
             holder = (ViewHolder) convertView.getTag();
         }
 
-        holder.text.setText(values.get(position).name);
+        CustomArtist customArtist = values.get(position);
 
-        List<Image> images = values.get(position).images;
-        int listSize = images.size();
-        if (listSize > 0)
+        holder.text.setText(customArtist.getName());
+
+        if (!customArtist.getUrl().equals(""))
         {
-            // we have removed the too small ones
-            // and the latest is the smallest
-            // so we just need the latest
-            Picasso.with(context).load(images.get(listSize - 1).url).into(holder.image);
+            Picasso.with(context).load(customArtist.getUrl()).into(holder.image);
         } else
         {
             // default thumbnail
             Picasso.with(context).load(DEFAULT_THUMBNAIL).into(holder.image);
         }
         return convertView;
-    }
-
-    @Override
-    public int describeContents()
-    {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags)
-    {
-
     }
 
     private static class ViewHolder

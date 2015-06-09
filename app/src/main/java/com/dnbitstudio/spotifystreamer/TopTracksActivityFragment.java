@@ -12,6 +12,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.dnbitstudio.spotifystreamer.adapters.TopTracksAdapter;
+import com.dnbitstudio.spotifystreamer.models.CustomTrack;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -34,8 +35,11 @@ import kaaes.spotify.webapi.android.models.Tracks;
 public class TopTracksActivityFragment extends Fragment
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
-    private static final String ADAPTER_KEY = "adapter";
+    private static final String CUSTOM_TRACKS_KEY = "custom_tracks_key";
     public static final String ARTIST_ID = "artistID";
+    public static final String ARTIST_NAME = "artistName";
+
+    private ArrayList<CustomTrack> customTracks;
 
     private TopTracksAdapter adapter;
     private String artistID = "";
@@ -50,21 +54,17 @@ public class TopTracksActivityFragment extends Fragment
     {
         View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
 
-        Intent intent = getActivity().getIntent();
-        if (intent != null && intent.getStringExtra(ARTIST_ID) != null)
-        {
-            artistID = intent.getStringExtra(ARTIST_ID);
-        }
+        adapter = new TopTracksAdapter(getActivity(),
+                R.layout.list_item_top_tracks,
+                new ArrayList<CustomTrack>());
 
-        if (savedInstanceState != null)
+        if(savedInstanceState != null)
         {
-            adapter = savedInstanceState.getParcelable(ADAPTER_KEY);
-        }
-        else
-        {
-            adapter = new TopTracksAdapter(getActivity(),
-                    R.layout.list_item_top_tracks,
-                    new ArrayList<Track>());
+            customTracks = savedInstanceState.getParcelableArrayList(CUSTOM_TRACKS_KEY);
+            for(CustomTrack customTrack: customTracks)
+            {
+                adapter.add(customTrack);
+            }
         }
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_top_artist);
@@ -75,10 +75,16 @@ public class TopTracksActivityFragment extends Fragment
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                String message = adapter.getItem(position).name;
+                String message = adapter.getItem(position).getName();
                 Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
             }
         });
+
+        Intent intent = getActivity().getIntent();
+        if (intent != null)
+        {
+            artistID = intent.getStringExtra(ARTIST_ID);
+        }
 
         return rootView;
     }
@@ -94,7 +100,7 @@ public class TopTracksActivityFragment extends Fragment
     public void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(ADAPTER_KEY, adapter);
+        outState.putParcelableArrayList(CUSTOM_TRACKS_KEY, customTracks);
     }
 
     public void performSearch(String artistID)
@@ -108,12 +114,12 @@ public class TopTracksActivityFragment extends Fragment
         }
     }
 
-    public class FetchTopTracksTask extends AsyncTask<String, Void, List<Track>>
+    public class FetchTopTracksTask extends AsyncTask<String, Void, ArrayList<CustomTrack>>
     {
         public static final int MIN_IMAGE_SIZE_SMALL = 200;
 
         @Override
-        protected List<Track> doInBackground(String... params)
+        protected ArrayList<CustomTrack> doInBackground(String... params)
         {
 
             if (params == null || params.length == 0)
@@ -139,50 +145,38 @@ public class TopTracksActivityFragment extends Fragment
                     && tracks.tracks.size() > 0)
             {
                 List<Track> actualTracks = tracks.tracks;
-                for (Track track : actualTracks)
+                customTracks = new ArrayList<>();
+                // Probably unnecessary but just in case
+                for (int i = 0; i < actualTracks.size() && i < 10; i++)
                 {
+                    Track track = actualTracks.get(i);
                     if (track.album != null && track.album.images != null
                             && track.album.images.size() > 0)
                     {
                         List<Image> images = track.album.images;
+                        String url = CommonHelper.getImageURL(getActivity(), images, MIN_IMAGE_SIZE_SMALL);
 
-                        ListIterator iterator = images.listIterator(images.size());
-                        // We want the smallest with width >= 200
-                        // We remove smaller than this to ensure it is
-                        // always at size()-1
-                        while (iterator.hasPrevious())
-                        {
-                            Image image = (Image) iterator.previous();
-                            if (iterator.hasPrevious())
-                            {
-                                if (image.width < MIN_IMAGE_SIZE_SMALL)
-                                {
-                                    iterator.remove();
-                                } else
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                        // Cache images
-                        Picasso.with(getActivity()).load(images.get(images.size() - 1).url).fetch();
+                        CustomTrack customTrack =
+                                new CustomTrack(track.name, track.album.name,
+                                        url, track.id);
+                        customTracks.add(customTrack);
                     }
                 }
-                return actualTracks;
+                return customTracks;
             }
             return null;
         }
 
         @Override
-        protected void onPostExecute(List<Track> results)
+        protected void onPostExecute(ArrayList<CustomTrack> results)
         {
             if (results != null && results.size() > 0)
             {
                 adapter.clear();
                 // Probably unnecessary but just in case
-                for (int i = 0; i < 10; i++)
+                for (CustomTrack customTrack : results)
                 {
-                    adapter.add(results.get(i));
+                    adapter.add(customTrack);
                 }
             }
         }

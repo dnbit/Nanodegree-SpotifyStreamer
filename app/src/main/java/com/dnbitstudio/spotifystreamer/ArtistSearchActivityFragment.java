@@ -13,11 +13,11 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.dnbitstudio.spotifystreamer.adapters.ArtistSearchAdapter;
+import com.dnbitstudio.spotifystreamer.models.CustomArtist;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -34,10 +34,12 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
 
-    private static final String ADAPTER_KEY = "adapter";
+    private static final String CUSTOM_ARTISTS_KEY = "custom_artists_key";
     private ArtistSearchAdapter adapter;
     private SearchView searchView;
     private ListView listView;
+
+    private ArrayList<CustomArtist> customArtists;
 
     public ArtistSearchActivityFragment()
     {
@@ -55,15 +57,17 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
 
+        adapter = new ArtistSearchAdapter(getActivity(),
+                R.layout.list_item_artist_search,
+                new ArrayList<CustomArtist>());
+
         if(savedInstanceState != null)
         {
-            adapter = savedInstanceState.getParcelable(ADAPTER_KEY);
-        }
-        else
-        {
-            adapter = new ArtistSearchAdapter(getActivity(),
-                    R.layout.list_item_artist_search,
-                    new ArrayList<Artist>());
+            customArtists = savedInstanceState.getParcelableArrayList(CUSTOM_ARTISTS_KEY);
+            for(CustomArtist customArtist: customArtists)
+            {
+                adapter.add(customArtist);
+            }
         }
 
         listView = (ListView) rootView.findViewById(R.id.listview_artist_search);
@@ -74,14 +78,15 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                String artistID = adapter.getItem(position).id;
+                String artistID = adapter.getItem(position).getId();
+                String artistName = adapter.getItem(position).getName();
                 Intent intent = new Intent(getActivity(), TopTracksActivity.class);
                 intent.putExtra(TopTracksActivityFragment.ARTIST_ID, artistID);
+                intent.putExtra(TopTracksActivityFragment.ARTIST_NAME, artistName);
 
                 startActivity(intent);
             }
         });
-
         return rootView;
     }
 
@@ -98,19 +103,19 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
     public void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(ADAPTER_KEY, adapter);
+        outState.putParcelableArrayList(CUSTOM_ARTISTS_KEY, customArtists);
     }
 
     @Override
-    public boolean onQueryTextSubmit(String artistName)
+    public boolean onQueryTextSubmit(String artistQuery)
     {
-        if (artistName.length() < 1)
+        if (artistQuery.length() < 1)
         {
             adapter.clear();
             listView.setSelectionAfterHeaderView();
         } else
         {
-            performSearch(artistName);
+            performSearch(artistQuery);
         }
         return true;
     }
@@ -138,13 +143,13 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
         }
     }
 
-    public class FetchArtistSearchTask extends AsyncTask<String, Void, List<Artist>>
+    public class FetchArtistSearchTask extends AsyncTask<String, Void, ArrayList<CustomArtist>>
     {
 
         public static final int MIN_IMAGE_SIZE_SMALL = 200;
 
         @Override
-        protected List<Artist> doInBackground(String... params)
+        protected ArrayList<CustomArtist> doInBackground(String... params)
         {
             if (params == null || params.length == 0)
             {
@@ -159,49 +164,31 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
                     artistsPager.artists.items != null)
             {
                 List<Artist> artists = artistsPager.artists.items;
+                customArtists = new ArrayList<>();
                 for (Artist artist : artists)
                 {
                     List<Image> images = artist.images;
-                    if (images.size() > 0)
-                    {
-                        ListIterator iterator = images.listIterator(images.size());
-                        // We want the smallest with width >= 200
-                        // We remove smaller than this to ensure it is
-                        // always at size()-1
-                        while (iterator.hasPrevious())
-                        {
-                            Image image = (Image) iterator.previous();
-                            if (iterator.hasPrevious())
-                            {
-                                if (image.width < MIN_IMAGE_SIZE_SMALL)
-                                {
-                                    iterator.remove();
-                                } else
-                                {
-                                    break;
-                                }
-                            }
-                        }
+                    String url = CommonHelper.getImageURL(getActivity(), images, MIN_IMAGE_SIZE_SMALL);
 
-                        // Cache images
-                        Picasso.with(getActivity()).load(images.get(images.size() - 1).url).fetch();
-                    }
+                    CustomArtist customArtist =
+                            new CustomArtist(artist.name, url, artist.id);
+                    customArtists.add(customArtist);
                 }
-                return artists;
+                return customArtists;
             }
             return null;
         }
 
         @Override
-        protected void onPostExecute(List<Artist> results)
+        protected void onPostExecute(ArrayList<CustomArtist> results)
         {
             if (results != null && results.size() > 0)
             {
                 searchView.clearFocus();
                 adapter.clear();
-                for (Artist artist : results)
+                for (CustomArtist customArtist : results)
                 {
-                    adapter.add(artist);
+                    adapter.add(customArtist);
                 }
                 listView.setSelectionAfterHeaderView();
             } else
