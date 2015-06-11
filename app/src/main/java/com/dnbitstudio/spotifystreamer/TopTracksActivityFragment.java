@@ -182,7 +182,7 @@ public class TopTracksActivityFragment extends Fragment
                             && track.album.images.size() > 0)
                     {
                         List<Image> images = track.album.images;
-                        String url = CommonHelper.getImageURL(getActivity(), images, MIN_IMAGE_SIZE_SMALL);
+                        String url = CommonHelper.getImageURL(images, MIN_IMAGE_SIZE_SMALL);
 
                         // Cache images
                         if (url.length() > 0)

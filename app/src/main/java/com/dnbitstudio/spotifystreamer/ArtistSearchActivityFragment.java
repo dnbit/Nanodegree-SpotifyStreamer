@@ -235,7 +235,7 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
                 for (Artist artist : artists)
                 {
                     List<Image> images = artist.images;
-                    String url = CommonHelper.getImageURL(getActivity(), images, MIN_IMAGE_SIZE_SMALL);
+                    String url = CommonHelper.getImageURL(images, MIN_IMAGE_SIZE_SMALL);
 
                     // Cache images
                     if (url.length() > 0)

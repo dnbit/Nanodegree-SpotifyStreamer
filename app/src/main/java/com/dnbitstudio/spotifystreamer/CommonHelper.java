@@ -1,6 +1,5 @@
 package com.dnbitstudio.spotifystreamer;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -25,7 +24,7 @@ public class CommonHelper
     }
 
 
-    public static String getImageURL(Activity activity, List<Image> images, int minWidth)
+    public static String getImageURL(List<Image> images, int minWidth)
     {
         int size = images.size();
         if (size > 0)
