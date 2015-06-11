@@ -15,6 +15,16 @@
         android:layout_margin="4dp"
         android:layout_alignParentTop="true" />
 
+    <ProgressBar
+        android:id="@+id/search_progress_bar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="8dp"
+        android:layout_below="@id/search_artist_name"
+        android:layout_centerHorizontal="true"
+        style="?android:attr/progressBarStyleLarge"
+        android:visibility="gone"/>
+
     <ListView
         android:id="@+id/listview_artist_search"
         android:layout_width="match_parent"

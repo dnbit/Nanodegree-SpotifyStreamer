@@ -7,4 +7,5 @@
     <string name="description_artist_thumbnail">Artist thumbnail</string>
     <string name="description_album_thumbnail">Album thumbnail</string>
     <string name="network_unavailable">Network connection not available</string>
+    <string name="connection_error">Connection error. Please try again</string>
 </resources>

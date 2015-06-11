@@ -5,8 +5,6 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.squareup.picasso.Picasso;
-
 import java.util.List;
 import java.util.ListIterator;
 
@@ -41,10 +39,7 @@ public class CommonHelper
                 {
                     if (image.width >= minWidth)
                     {
-                        String url = image.url;
-                        // Cache images
-                        Picasso.with(activity).load(url).fetch();
-                        return url;
+                        return image.url;
                     }
                 }
             }
