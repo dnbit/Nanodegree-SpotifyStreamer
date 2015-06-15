@@ -1,7 +1,6 @@
 package com.dnbitstudio.spotifystreamer;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SearchView;
@@ -25,12 +24,16 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Image;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 
 /**
  * A fragment for the artist search
  */
-public class ArtistSearchActivityFragment extends Fragment implements android.support.v7.widget.SearchView.OnQueryTextListener,
+public class ArtistSearchActivityFragment extends Fragment
+        implements android.support.v7.widget.SearchView.OnQueryTextListener,
         android.support.v7.widget.SearchView.OnCloseListener
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
@@ -45,8 +48,10 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
 
     // variables to manage rotation
     private ArrayList<CustomArtist> customArtists = new ArrayList<>();
-    private boolean isAsyncTaskRunning = false;
+    private boolean isQueryRunning = false;
     private String artistQuery;
+
+    public static final int MIN_IMAGE_SIZE_SMALL = 200;
 
     public ArtistSearchActivityFragment()
     {
@@ -73,7 +78,7 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
         // get saved values and update adapter
         if (savedInstanceState != null)
         {
-            isAsyncTaskRunning = savedInstanceState.getBoolean(IS_ASYNC_TASK_RUNNING);
+            isQueryRunning = savedInstanceState.getBoolean(IS_ASYNC_TASK_RUNNING);
             customArtists = savedInstanceState.getParcelableArrayList(CUSTOM_ARTISTS_KEY);
             artistQuery = savedInstanceState.getString(ARTIST_QUERY);
             if (customArtists != null)
@@ -103,6 +108,11 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
         });
 
         progressBar = (ProgressBar) rootView.findViewById(R.id.search_progress_bar);
+
+        // Cache default img
+        // Note: It is safe to invoke fetch from any thread
+        Picasso.with(getActivity()).load(R.mipmap.ic_launcher).fetch();
+
         return rootView;
     }
 
@@ -110,20 +120,11 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
     public void onViewCreated(View view, Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
-        // if Async Task did not finish run it again
-        if (isAsyncTaskRunning)
+        // if query did not finish run it again
+        if (isQueryRunning)
         {
             performSearch(artistQuery);
         }
-    }
-
-    @Override
-    public void onStart()
-    {
-        super.onStart();
-        // Cache default img
-        // Note: It is safe to invoke fetch from any thread
-        Picasso.with(getActivity()).load(ArtistSearchAdapter.DEFAULT_THUMBNAIL).fetch();
     }
 
     @Override
@@ -131,7 +132,7 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
     {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(CUSTOM_ARTISTS_KEY, customArtists);
-        outState.putBoolean(IS_ASYNC_TASK_RUNNING, isAsyncTaskRunning);
+        outState.putBoolean(IS_ASYNC_TASK_RUNNING, isQueryRunning);
         outState.putString(ARTIST_QUERY, artistQuery);
     }
 
@@ -167,14 +168,98 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
     {
         if (CommonHelper.isNetworkConnected(getActivity()))
         {
-            // The Async Task is now running
-            isAsyncTaskRunning = true;
-            new FetchArtistSearchTask().execute(artist);
+            // The query is now running
+            isQueryRunning = true;
+
+            SpotifyApi api = new SpotifyApi();
+            SpotifyService spotify = api.getService();
+
+            spotify.searchArtists(artist, new Callback<ArtistsPager>()
+            {
+                @Override
+                public void success(ArtistsPager artistsPager, Response response)
+                {
+                    if (artistsPager != null && artistsPager.artists != null &&
+                            artistsPager.artists.items != null &&
+                            artistsPager.artists.items.size() > 0)
+                    {
+                        parseData(artistsPager);
+                    } else
+                    {
+                        String message = getString(R.string.refine_search);
+                        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+                    }
+                    // Query has now finished
+                    isQueryRunning = false;
+
+                    getActivity().runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            updateUIAfterSearch();
+                        }
+                    });
+                }
+
+                @Override
+                public void failure(RetrofitError error)
+                {
+                    // Query has now finished
+                    isQueryRunning = false;
+
+                    getActivity().runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            String message = getString(R.string.connection_error);
+                            Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
         } else
         {
-            isAsyncTaskRunning = false;
+            isQueryRunning = false;
             Toast.makeText(getActivity(), getString(R.string.network_unavailable), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void parseData(ArtistsPager artistsPager)
+    {
+        List<Artist> artists = artistsPager.artists.items;
+
+        // Risk of rotation while creating our
+        // model's objects force to use a temporary variable
+        ArrayList<CustomArtist> tempArtists = new ArrayList<>();
+        CustomArtist customArtist;
+        for (Artist artist : artists)
+        {
+            List<Image> images = artist.images;
+            String url = CommonHelper.getImageURL(images, MIN_IMAGE_SIZE_SMALL);
+
+            customArtist =
+                    new CustomArtist(artist.name, url, artist.id);
+            tempArtists.add(customArtist);
+        }
+        // once our model's objects are created
+        // we can assign it to the appropriate variable
+        customArtists = tempArtists;
+    }
+
+    public void updateUIAfterSearch()
+    {
+        toggleVisibility();
+        searchView.clearFocus();
+        updateAdapter();
+        listView.setSelectionAfterHeaderView();
+    }
+
+    public void toggleVisibility()
+    {
+        progressBar.setVisibility(View.GONE);
+        listView.setVisibility(View.VISIBLE);
     }
 
     private void updateAdapter()
@@ -183,104 +268,6 @@ public class ArtistSearchActivityFragment extends Fragment implements android.su
         for (CustomArtist customArtist : customArtists)
         {
             adapter.add(customArtist);
-        }
-    }
-
-    public class FetchArtistSearchTask extends AsyncTask<String, Void, ArrayList<CustomArtist>>
-    {
-        public static final int MIN_IMAGE_SIZE_SMALL = 200;
-        private boolean retrofitError = false;
-
-        @Override
-        protected void onPreExecute()
-        {
-            progressBar.setVisibility(View.VISIBLE);
-            listView.setVisibility(View.GONE);
-            super.onPreExecute();
-        }
-
-        @Override
-        protected ArrayList<CustomArtist> doInBackground(String... params)
-        {
-            if (params == null || params.length == 0)
-            {
-                return null;
-            }
-
-            SpotifyApi api = new SpotifyApi();
-            SpotifyService spotify = api.getService();
-
-            ArtistsPager artistsPager;
-
-            // Need to catch Runtime exception by retrofit timeout
-            try
-            {
-                artistsPager = spotify.searchArtists(params[0]);
-            } catch (RuntimeException ex)
-            {
-                retrofitError = true;
-                return null;
-            }
-
-            if (artistsPager != null && artistsPager.artists != null &&
-                    artistsPager.artists.items != null &&
-                    artistsPager.artists.items.size() > 0)
-            {
-                List<Artist> artists = artistsPager.artists.items;
-
-                // Risk of rotation while creating our
-                // model's objects force to use a temporary variable
-                ArrayList<CustomArtist> tempArtists = new ArrayList<>();
-                CustomArtist customArtist;
-                for (Artist artist : artists)
-                {
-                    List<Image> images = artist.images;
-                    String url = CommonHelper.getImageURL(images, MIN_IMAGE_SIZE_SMALL);
-
-                    // Cache images
-                    if (url.length() > 0)
-                    {
-                        Picasso.with(getActivity()).load(url).fetch();
-                    }
-
-                    customArtist =
-                            new CustomArtist(artist.name, url, artist.id);
-                    tempArtists.add(customArtist);
-                }
-                // once our model's objects are created
-                // we can assign it to the appropriate variable
-                customArtists = tempArtists;
-
-                // AsyncTask has now finished
-                isAsyncTaskRunning = false;
-                return customArtists;
-            }
-
-            // AsyncTask has now finished
-            isAsyncTaskRunning = false;
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(ArrayList<CustomArtist> results)
-        {
-            progressBar.setVisibility(View.GONE);
-            listView.setVisibility(View.VISIBLE);
-            if (results != null)
-            {
-                searchView.clearFocus();
-                updateAdapter();
-                listView.setSelectionAfterHeaderView();
-            } else
-            {
-                String message = getString(R.string.refine_search);
-                if (retrofitError)
-                {
-                    message = getString(R.string.connection_error);
-                    retrofitError = false;
-                }
-                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
-            }
         }
     }
 }

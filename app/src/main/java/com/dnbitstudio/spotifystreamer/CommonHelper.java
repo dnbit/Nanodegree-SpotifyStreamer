@@ -43,6 +43,6 @@ public class CommonHelper
                 }
             }
         }
-        return "";
+        return null;
     }
 }

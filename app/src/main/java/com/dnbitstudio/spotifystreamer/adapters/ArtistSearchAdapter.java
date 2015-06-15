@@ -23,7 +23,6 @@ public class ArtistSearchAdapter extends ArrayAdapter<CustomArtist>
     private final ArrayList<CustomArtist> values;
 
     private final LayoutInflater inflater;
-    public static final int DEFAULT_THUMBNAIL = R.mipmap.ic_launcher;
 
     public ArtistSearchAdapter(Context context, int layoutResource, ArrayList<CustomArtist> values)
     {
@@ -58,13 +57,17 @@ public class ArtistSearchAdapter extends ArrayAdapter<CustomArtist>
 
         holder.text.setText(customArtist.getName());
 
-        if (!customArtist.getUrl().equals(""))
+        if (customArtist.getUrl() != null)
         {
-            Picasso.with(context).load(customArtist.getUrl()).into(holder.image);
+            Picasso.with(context)
+                    .load(customArtist.getUrl())
+                    .placeholder(R.drawable.ic_loading)
+                    .error(R.mipmap.ic_launcher)
+                    .into(holder.image);
         } else
         {
             // default thumbnail
-            Picasso.with(context).load(DEFAULT_THUMBNAIL).into(holder.image);
+            Picasso.with(context).load(R.mipmap.ic_launcher).into(holder.image);
         }
         return convertView;
     }

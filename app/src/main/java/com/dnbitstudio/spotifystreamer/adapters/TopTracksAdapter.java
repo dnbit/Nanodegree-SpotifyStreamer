@@ -23,7 +23,6 @@ public class TopTracksAdapter extends ArrayAdapter<CustomTrack>
     private final ArrayList<CustomTrack> values;
 
     private final LayoutInflater inflater;
-    public static final int DEFAULT_THUMBNAIL = R.mipmap.ic_launcher;
 
     public TopTracksAdapter(Context context, int layoutResource, ArrayList<CustomTrack> values)
     {
@@ -58,13 +57,17 @@ public class TopTracksAdapter extends ArrayAdapter<CustomTrack>
 
         holder.text.setText(customTrack.getName() + "\n" + customTrack.getAlbum());
 
-        if (!customTrack.getUrl().equals(""))
+        if (customTrack.getUrl() != null)
         {
-            Picasso.with(context).load(customTrack.getUrl()).into(holder.image);
+            Picasso.with(context)
+                    .load(customTrack.getUrl())
+                    .placeholder(R.drawable.ic_loading)
+                    .error(R.mipmap.ic_launcher)
+                    .into(holder.image);
         } else
         {
             // default thumbnail
-            Picasso.with(context).load(DEFAULT_THUMBNAIL).into(holder.image);
+            Picasso.with(context).load(R.mipmap.ic_launcher).into(holder.image);
         }
         return convertView;
     }
