@@ -40,7 +40,7 @@ public class TopTracksActivityFragment extends Fragment
     private final String LOG_TAG = this.getClass().getSimpleName();
 
     private static final String CUSTOM_TRACKS_KEY = "custom_tracks_key";
-    private static final String IS_ASYNC_TASK_RUNNING = "is_async_task_running_key";
+    private static final String IS_QUERY_RUNNING = "is_query_running_key";
     public static final String ARTIST_ID = "artistID";
     public static final String ARTIST_NAME = "artistName";
 
@@ -74,7 +74,7 @@ public class TopTracksActivityFragment extends Fragment
         // get saved values and update adapter
         if (savedInstanceState != null)
         {
-            isQueryRunning = savedInstanceState.getBoolean(IS_ASYNC_TASK_RUNNING);
+            isQueryRunning = savedInstanceState.getBoolean(IS_QUERY_RUNNING);
             customTracks = savedInstanceState.getParcelableArrayList(CUSTOM_TRACKS_KEY);
             updateAdapter();
         }
@@ -113,14 +113,14 @@ public class TopTracksActivityFragment extends Fragment
     {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(CUSTOM_TRACKS_KEY, customTracks);
-        outState.putBoolean(IS_ASYNC_TASK_RUNNING, isQueryRunning);
+        outState.putBoolean(IS_QUERY_RUNNING, isQueryRunning);
     }
 
     public void performSearch(String artistID)
     {
         if (CommonHelper.isNetworkConnected(getActivity()))
         {
-            // The Async Task is now running
+            // The query is now running
             isQueryRunning = true;
 
             SpotifyApi api = new SpotifyApi();
@@ -143,19 +143,23 @@ public class TopTracksActivityFragment extends Fragment
                             && tracks.tracks.size() > 0)
                     {
                         parseData(tracks);
-                    }
 
-                    // AsyncTask has now finished
-                    isQueryRunning = false;
+                        // Query has now finished
+                        isQueryRunning = false;
 
-                    getActivity().runOnUiThread(new Runnable()
-                    {
-                        @Override
-                        public void run()
+                        getActivity().runOnUiThread(new Runnable()
                         {
-                            updateUIAfterSearch();
-                        }
-                    });
+                            @Override
+                            public void run()
+                            {
+                                updateUIAfterSearch();
+                            }
+                        });
+                    } else
+                    {
+                        // Query has now finished
+                        isQueryRunning = false;
+                    }
                 }
 
                 @Override

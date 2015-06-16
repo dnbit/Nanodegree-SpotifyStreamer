@@ -41,7 +41,7 @@ public class ArtistSearchActivityFragment extends Fragment
     private final String LOG_TAG = this.getClass().getSimpleName();
 
     private static final String CUSTOM_ARTISTS_KEY = "custom_artists_key";
-    private static final String IS_ASYNC_TASK_RUNNING = "is_async_task_running_key";
+    private static final String IS_QUERY_RUNNING = "is_query_running_key";
     private static final String ARTIST_QUERY = "artist_query";
     private ArtistSearchAdapter adapter;
 
@@ -84,7 +84,7 @@ public class ArtistSearchActivityFragment extends Fragment
         // get saved values and update adapter
         if (savedInstanceState != null)
         {
-            isQueryRunning = savedInstanceState.getBoolean(IS_ASYNC_TASK_RUNNING);
+            isQueryRunning = savedInstanceState.getBoolean(IS_QUERY_RUNNING);
             customArtists = savedInstanceState.getParcelableArrayList(CUSTOM_ARTISTS_KEY);
             artistQuery = savedInstanceState.getString(ARTIST_QUERY);
             if (customArtists != null)
@@ -135,7 +135,7 @@ public class ArtistSearchActivityFragment extends Fragment
     {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(CUSTOM_ARTISTS_KEY, customArtists);
-        outState.putBoolean(IS_ASYNC_TASK_RUNNING, isQueryRunning);
+        outState.putBoolean(IS_QUERY_RUNNING, isQueryRunning);
         outState.putString(ARTIST_QUERY, artistQuery);
     }
 
@@ -187,22 +187,33 @@ public class ArtistSearchActivityFragment extends Fragment
                             artistsPager.artists.items.size() > 0)
                     {
                         parseData(artistsPager);
+
+                        // Query has now finished
+                        isQueryRunning = false;
+
+                        getActivity().runOnUiThread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                updateUIAfterSearch();
+                            }
+                        });
                     } else
                     {
-                        String message = getString(R.string.refine_search);
-                        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
-                    }
-                    // Query has now finished
-                    isQueryRunning = false;
+                        // Query has now finished
+                        isQueryRunning = false;
 
-                    getActivity().runOnUiThread(new Runnable()
-                    {
-                        @Override
-                        public void run()
+                        getActivity().runOnUiThread(new Runnable()
                         {
-                            updateUIAfterSearch();
-                        }
-                    });
+                            @Override
+                            public void run()
+                            {
+                                String message = getString(R.string.refine_search);
+                                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
                 }
 
                 @Override
