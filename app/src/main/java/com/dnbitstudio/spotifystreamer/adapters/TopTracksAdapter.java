@@ -14,6 +14,9 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+
 public class TopTracksAdapter extends ArrayAdapter<CustomTrack>
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
@@ -43,10 +46,7 @@ public class TopTracksAdapter extends ArrayAdapter<CustomTrack>
         {
             convertView = inflater.inflate(layoutResource, null);
 
-            holder = new ViewHolder();
-            holder.image = (ImageView) convertView.findViewById(R.id.list_item_top_tracks_thumbnail);
-            holder.text = (TextView) convertView.findViewById(R.id.list_item_top_tracks_track_name);
-
+            holder = new ViewHolder(convertView);
             convertView.setTag(holder);
         } else
         {
@@ -72,9 +72,16 @@ public class TopTracksAdapter extends ArrayAdapter<CustomTrack>
         return convertView;
     }
 
-    private static class ViewHolder
+    static class ViewHolder
     {
-        public ImageView image;
-        public TextView text;
+        @InjectView(R.id.list_item_top_tracks_thumbnail)
+        ImageView image;
+        @InjectView(R.id.list_item_top_tracks_track_name)
+        TextView text;
+
+        public ViewHolder(View view)
+        {
+            ButterKnife.inject(this, view);
+        }
     }
 }

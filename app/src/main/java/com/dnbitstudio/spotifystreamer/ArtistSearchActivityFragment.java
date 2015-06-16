@@ -19,6 +19,8 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
@@ -42,9 +44,13 @@ public class ArtistSearchActivityFragment extends Fragment
     private static final String IS_ASYNC_TASK_RUNNING = "is_async_task_running_key";
     private static final String ARTIST_QUERY = "artist_query";
     private ArtistSearchAdapter adapter;
-    private SearchView searchView;
-    private ListView listView;
-    private ProgressBar progressBar;
+
+    @InjectView(R.id.search_artist_name)
+    SearchView searchView;
+    @InjectView(R.id.listview_artist_search)
+    ListView listView;
+    @InjectView(R.id.search_progress_bar)
+    ProgressBar progressBar;
 
     // variables to manage rotation
     private ArrayList<CustomArtist> customArtists = new ArrayList<>();
@@ -62,9 +68,9 @@ public class ArtistSearchActivityFragment extends Fragment
                              Bundle savedInstanceState)
     {
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
+        ButterKnife.inject(this, rootView);
 
         // Set the searchView
-        searchView = (SearchView) rootView.findViewById(R.id.search_artist_name);
         searchView.setQueryHint(getString(R.string.searchview_hint));
         searchView.setIconifiedByDefault(false);
         searchView.setOnQueryTextListener(this);
@@ -87,7 +93,6 @@ public class ArtistSearchActivityFragment extends Fragment
             }
         }
 
-        listView = (ListView) rootView.findViewById(R.id.listview_artist_search);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -106,8 +111,6 @@ public class ArtistSearchActivityFragment extends Fragment
                 startActivity(intent);
             }
         });
-
-        progressBar = (ProgressBar) rootView.findViewById(R.id.search_progress_bar);
 
         // Cache default img
         // Note: It is safe to invoke fetch from any thread

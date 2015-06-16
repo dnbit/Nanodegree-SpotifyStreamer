@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Image;
@@ -44,6 +46,9 @@ public class TopTracksActivityFragment extends Fragment
 
     private TopTracksAdapter adapter;
 
+    @InjectView(R.id.listview_top_artist)
+    ListView listView;
+
     // variables to manage rotation
     private ArrayList<CustomTrack> customTracks;
     private boolean isQueryRunning = false;
@@ -59,6 +64,7 @@ public class TopTracksActivityFragment extends Fragment
                              Bundle savedInstanceState)
     {
         View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
+        ButterKnife.inject(this, rootView);
 
         // Initialize the adapter
         adapter = new TopTracksAdapter(getActivity(),
@@ -73,7 +79,6 @@ public class TopTracksActivityFragment extends Fragment
             updateAdapter();
         }
 
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_top_artist);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
