@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dnbitstudio.spotifystreamer.adapters.TopTracksAdapter;
@@ -48,6 +50,10 @@ public class TopTracksActivityFragment extends Fragment
 
     @InjectView(R.id.listview_top_artist)
     ListView listView;
+    @InjectView(R.id.search_progress_bar)
+    ProgressBar progressBar;
+    @InjectView(R.id.no_results)
+    TextView tvNoResults;
 
     // variables to manage rotation
     private ArrayList<CustomTrack> customTracks;
@@ -76,7 +82,13 @@ public class TopTracksActivityFragment extends Fragment
         {
             isQueryRunning = savedInstanceState.getBoolean(IS_QUERY_RUNNING);
             customTracks = savedInstanceState.getParcelableArrayList(CUSTOM_TRACKS_KEY);
-            updateAdapter();
+            if (customTracks != null && customTracks.size() > 0)
+            {
+                updateUIAfterSearch();
+            } else
+            {
+                toggleVisibility();
+            }
         }
 
         listView.setAdapter(adapter);
@@ -159,6 +171,15 @@ public class TopTracksActivityFragment extends Fragment
                     {
                         // Query has now finished
                         isQueryRunning = false;
+
+                        getActivity().runOnUiThread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                toggleVisibility();
+                            }
+                        });
                     }
                 }
 
@@ -173,6 +194,7 @@ public class TopTracksActivityFragment extends Fragment
                         @Override
                         public void run()
                         {
+                            toggleVisibility();
                             String message = getString(R.string.connection_error);
                             Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
                         }
@@ -218,7 +240,17 @@ public class TopTracksActivityFragment extends Fragment
 
     public void updateUIAfterSearch()
     {
+        toggleVisibility();
         updateAdapter();
+    }
+
+    public void toggleVisibility()
+    {
+        progressBar.setVisibility(View.GONE);
+        if (customTracks == null || customTracks.size() == 0)
+        {
+            tvNoResults.setVisibility(View.VISIBLE);
+        }
     }
 
     private void updateAdapter()
