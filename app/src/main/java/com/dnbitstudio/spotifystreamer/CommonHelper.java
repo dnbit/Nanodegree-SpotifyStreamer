@@ -34,13 +34,10 @@ public class CommonHelper
             while (iterator.hasPrevious())
             {
                 Image image = (Image) iterator.previous();
-                if (iterator.hasPrevious())
-                {
                     if (image.width >= minWidth)
                     {
                         return image.url;
                     }
-                }
             }
         }
         return null;

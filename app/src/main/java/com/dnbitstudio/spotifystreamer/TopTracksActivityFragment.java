@@ -45,6 +45,7 @@ public class TopTracksActivityFragment extends Fragment
     private static final String IS_QUERY_RUNNING = "is_query_running_key";
     public static final String ARTIST_ID = "artistID";
     public static final String ARTIST_NAME = "artistName";
+    String artistName;
 
     private TopTracksAdapter adapter;
 
@@ -60,6 +61,7 @@ public class TopTracksActivityFragment extends Fragment
     private boolean isQueryRunning = false;
 
     public static final int MIN_IMAGE_SIZE_SMALL = 200;
+    public static final int MIN_IMAGE_SIZE_LARGE = 640;
 
     public TopTracksActivityFragment()
     {
@@ -98,14 +100,17 @@ public class TopTracksActivityFragment extends Fragment
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                String message = adapter.getItem(position).getName();
-                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), PlayTrackActivity.class);
+                intent.putParcelableArrayListExtra(PlayTrackActivityFragment.TRACKS, customTracks);
+                intent.putExtra(PlayTrackActivityFragment.TRACK_NUMBER, position);
+                startActivity(intent);
             }
         });
 
         Intent intent = getActivity().getIntent();
         if (intent != null)
         {
+            artistName = intent.getStringExtra(ARTIST_NAME);
             String artistID = intent.getStringExtra(ARTIST_ID);
             if (savedInstanceState == null || isQueryRunning)
             {
@@ -224,11 +229,12 @@ public class TopTracksActivityFragment extends Fragment
                     && track.album.images.size() > 0)
             {
                 List<Image> images = track.album.images;
-                String url = CommonHelper.getImageURL(images, MIN_IMAGE_SIZE_SMALL);
+                String url_small = CommonHelper.getImageURL(images, MIN_IMAGE_SIZE_SMALL);
+                String url_large = CommonHelper.getImageURL(images, MIN_IMAGE_SIZE_LARGE);
 
                 customTrack =
                         new CustomTrack(track.name, track.album.name,
-                                url, track.id);
+                                url_small, url_large, track.preview_url, artistName);
                 tempTracks.add(customTrack);
             }
         }

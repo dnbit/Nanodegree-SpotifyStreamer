@@ -57,10 +57,10 @@ public class TopTracksAdapter extends ArrayAdapter<CustomTrack>
 
         holder.text.setText(customTrack.getName() + "\n" + customTrack.getAlbum());
 
-        if (customTrack.getUrl() != null)
+        if (customTrack.getUrl_small() != null)
         {
             Picasso.with(context)
-                    .load(customTrack.getUrl())
+                    .load(customTrack.getUrl_small())
                     .placeholder(R.drawable.ic_loading)
                     .error(R.mipmap.ic_launcher)
                     .into(holder.image);

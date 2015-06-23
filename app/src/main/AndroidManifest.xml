@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application
         android:allowBackup="true"
@@ -23,10 +24,19 @@
         <activity
             android:name=".TopTracksActivity"
             android:label="@string/title_activity_top_tracks"
+            android:launchMode="singleTop"
             android:parentActivityName=".ArtistSearchActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.dnbitstudio.spotifystreamer.ArtistSearchActivity" />
+        </activity>
+        <activity
+            android:name=".PlayTrackActivity"
+            android:label="@string/title_activity_play_track"
+            android:parentActivityName=".TopTracksActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.dnbitstudio.spotifystreamer.TopTracksActivity"/>
         </activity>
     </application>
 
