@@ -38,6 +38,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.dnbitstudio.spotifystreamer.TopTracksActivity"/>
         </activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".ArtistSearchActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.dnbitstudio.spotifystreamer.ArtistSearchActivity"/>
+        </activity>
     </application>
 
 </manifest>

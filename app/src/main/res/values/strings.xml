@@ -15,4 +15,28 @@
     <string name="play_pause">play/pause</string>
     <string name="next">next</string>
     <string name="action_share">Share</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!--PREFERENCES-->
+    <string name="pref_country_label">Country</string>
+    <string name="pref_country_key" translatable="false">country</string>
+    <string name="pref_country_default" translatable="false">US</string>
+
+
+    <string name="pref_country_label_china">China</string>
+    <string name="pref_country_label_germany">Germany</string>
+    <string name="pref_country_label_italy">Italy</string>
+    <string name="pref_country_label_japan">Japan</string>
+    <string name="pref_country_label_spain">Spain</string>
+    <string name="pref_country_label_united_kingdom">United Kingdom</string>
+    <string name="pref_country_label_united_states_america">United States of America</string>
+
+    <string name="pref_country_china" translatable="false">CN</string>
+    <string name="pref_country_germany" translatable="false">DE</string>
+    <string name="pref_country_italy" translatable="false">IT</string>
+    <string name="pref_country_japan" translatable="false">JP</string>
+    <string name="pref_country_spain" translatable="false">ES</string>
+    <string name="pref_country_united_kingdom" translatable="false">GB</string>
+    <string name="pref_country_united_states_america" translatable="false">US</string>
+
 </resources>

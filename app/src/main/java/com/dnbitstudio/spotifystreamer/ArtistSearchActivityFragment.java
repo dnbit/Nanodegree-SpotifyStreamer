@@ -61,6 +61,7 @@ public class ArtistSearchActivityFragment extends Fragment
 
     public ArtistSearchActivityFragment()
     {
+        setHasOptionsMenu(true);
     }
 
     @Override

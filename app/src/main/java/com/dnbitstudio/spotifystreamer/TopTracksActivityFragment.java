@@ -1,7 +1,9 @@
 package com.dnbitstudio.spotifystreamer;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +21,6 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import butterknife.ButterKnife;
@@ -144,11 +145,15 @@ public class TopTracksActivityFragment extends Fragment
             SpotifyService spotify = api.getService();
 
             Map<String, Object> map = new HashMap<>();
-            String country = Locale.getDefault().getCountry();
+            /*String country = Locale.getDefault().getCountry();
             if (country.equals(""))
             {
                 country = "US";
-            }
+            }*/
+
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String country = sharedPreferences.getString(getString(R.string.pref_country_key), getString(R.string.pref_country_default));
+
             map.put("country", country);
 
             spotify.getArtistTopTrack(artistID, map, new Callback<Tracks>()

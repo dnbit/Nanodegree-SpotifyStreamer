@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="pref_country_options">
+        <item>@string/pref_country_label_china</item>
+        <item>@string/pref_country_label_germany</item>
+        <item>@string/pref_country_label_italy</item>
+        <item>@string/pref_country_label_japan</item>
+        <item>@string/pref_country_label_spain</item>
+        <item>@string/pref_country_label_united_kingdom</item>
+        <item>@string/pref_country_label_united_states_america</item>
+    </string-array>
+
+    <string-array name="pref_country_values">
+        <item>@string/pref_country_china</item>
+        <item>@string/pref_country_germany</item>
+        <item>@string/pref_country_italy</item>
+        <item>@string/pref_country_japan</item>
+        <item>@string/pref_country_spain</item>
+        <item>@string/pref_country_united_kingdom</item>
+        <item>@string/pref_country_united_states_america</item>
+    </string-array>
+</resources>
