@@ -30,6 +30,7 @@
         android:id="@+id/listview_artist_search"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/search_artist_name"/>
+        android:layout_below="@id/search_artist_name"
+        style="@style/ArtistListStyle"/>
 
 </RelativeLayout>

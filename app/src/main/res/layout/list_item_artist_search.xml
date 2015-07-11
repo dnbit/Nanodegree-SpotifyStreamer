@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
     android:id="@+id/list_item_artist_search_rootview"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/touch_selector"
     android:minHeight="?android:listPreferredItemHeight">
 
     <ImageView
@@ -19,8 +21,8 @@
         android:id="@+id/list_item_artist_search_name"
         android:layout_width="match_parent"
         android:layout_height="96dp"
-        android:layout_toRightOf="@id/list_item_artist_search_thumbnail"
         android:layout_toEndOf="@id/list_item_artist_search_thumbnail"
-        android:gravity="center_vertical" />
+        android:layout_toRightOf="@id/list_item_artist_search_thumbnail"
+        android:gravity="center_vertical"/>
 
 </RelativeLayout>

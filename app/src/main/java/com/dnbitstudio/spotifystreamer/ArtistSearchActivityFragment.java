@@ -41,7 +41,7 @@ public class ArtistSearchActivityFragment extends Fragment
 
     private static final String CUSTOM_ARTISTS_KEY = "custom_artists_key";
     private static final String IS_QUERY_RUNNING = "is_query_running_key";
-    private static final String ARTIST_QUERY = "artist_query";
+    private static final String ARTIST_QUERY = "artist_query_key";
     private ArtistSearchAdapter adapter;
 
     @InjectView(R.id.search_artist_name)
