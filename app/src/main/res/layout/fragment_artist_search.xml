@@ -13,7 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_margin="4dp"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true"
+        android:imeOptions="flagNoExtractUi"/>
 
     <ProgressBar
         android:id="@+id/search_progress_bar"

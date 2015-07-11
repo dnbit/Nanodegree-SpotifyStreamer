@@ -1,6 +1,5 @@
 package com.dnbitstudio.spotifystreamer;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SearchView;
@@ -59,6 +58,11 @@ public class ArtistSearchActivityFragment extends Fragment
 
     public static final int MIN_IMAGE_SIZE_SMALL = 200;
 
+    public interface FragmentCallback
+    {
+        void onItemSelected(String artistID, String artistName);
+    }
+
     public ArtistSearchActivityFragment()
     {
         setHasOptionsMenu(true);
@@ -104,12 +108,7 @@ public class ArtistSearchActivityFragment extends Fragment
                 String artistID = adapter.getItem(position).getId();
                 String artistName = adapter.getItem(position).getName();
 
-                //Create intent and start new activity
-                Intent intent = new Intent(getActivity(), TopTracksActivity.class);
-                intent.putExtra(TopTracksActivityFragment.ARTIST_ID, artistID);
-                intent.putExtra(TopTracksActivityFragment.ARTIST_NAME, artistName);
-
-                startActivity(intent);
+                ((ArtistSearchActivity) getActivity()).onItemSelected(artistID, artistName);
             }
         });
 

@@ -17,10 +17,21 @@ public class TopTracksActivity extends AppCompatActivity
         if (intent != null)
         {
             String artistName = intent.getStringExtra(TopTracksActivityFragment.ARTIST_NAME);
-            if(getSupportActionBar() != null)
+            if (getSupportActionBar() != null)
             {
                 getSupportActionBar().setSubtitle(artistName);
             }
+        }
+        if (savedInstanceState == null && intent != null)
+        {
+            // Only reachable by startIntent from ArtistSearchActivity
+            String artistID = intent.getStringExtra(TopTracksActivityFragment.ARTIST_ID);
+            String artistName = intent.getStringExtra(TopTracksActivityFragment.ARTIST_NAME);
+            TopTracksActivityFragment topTracksFragment =
+                    TopTracksActivityFragment.newInstance(artistID, artistName);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.top_tracks_container, topTracksFragment).commit();
         }
     }
 

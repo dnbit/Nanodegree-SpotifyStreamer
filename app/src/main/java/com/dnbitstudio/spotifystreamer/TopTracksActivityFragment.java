@@ -68,6 +68,18 @@ public class TopTracksActivityFragment extends Fragment
     {
     }
 
+    public static TopTracksActivityFragment newInstance(String artistID, String artistName)
+    {
+        TopTracksActivityFragment fragment = new TopTracksActivityFragment();
+
+        Bundle args = new Bundle();
+        args.putString(ARTIST_ID, artistID);
+        args.putString(ARTIST_NAME, artistName);
+
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
@@ -108,17 +120,16 @@ public class TopTracksActivityFragment extends Fragment
             }
         });
 
-        Intent intent = getActivity().getIntent();
-        if (intent != null)
+        Bundle args = getArguments();
+        if (args != null)
         {
-            artistName = intent.getStringExtra(ARTIST_NAME);
-            String artistID = intent.getStringExtra(ARTIST_ID);
+            artistName = args.getString(ARTIST_NAME);
+            String artistID = args.getString(ARTIST_ID);
             if (savedInstanceState == null || isQueryRunning)
             {
                 performSearch(artistID);
             }
         }
-
         // Cache default img
         // Note: It is safe to invoke fetch from any thread
         Picasso.with(getActivity()).load(R.mipmap.ic_launcher).fetch();
