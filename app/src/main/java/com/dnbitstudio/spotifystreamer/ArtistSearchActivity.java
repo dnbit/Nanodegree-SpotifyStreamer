@@ -6,7 +6,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class ArtistSearchActivity extends AppCompatActivity implements ArtistSearchActivityFragment.FragmentCallback
+import com.dnbitstudio.spotifystreamer.models.CustomTrack;
+
+import java.util.ArrayList;
+
+public class ArtistSearchActivity extends AppCompatActivity
+        implements ArtistSearchActivityFragment.ArtistSearchFragmentCallback,
+        TopTracksActivityFragment.TopTracksFragmentCallback
 {
     private boolean mTwoPane;
 
@@ -16,14 +22,8 @@ public class ArtistSearchActivity extends AppCompatActivity implements ArtistSea
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_artist_search);
 
-        if (findViewById(R.id.top_tracks_container) != null)
-        {
-            mTwoPane = true;
-            // Don't need to add the fragment before a search is performed
-        } else
-        {
-            mTwoPane = false;
-        }
+        // if it takes the boolean from sw600 it is two pane
+        mTwoPane = getResources().getBoolean(R.bool.sw600);
     }
 
     @Override
@@ -72,5 +72,16 @@ public class ArtistSearchActivity extends AppCompatActivity implements ArtistSea
 
             startActivity(intent);
         }
+    }
+
+    @Override
+    public void onItemSelected(ArrayList<CustomTrack> customTracks, int position)
+    {
+        // Note that this will be only called from
+        // if it is 2 Pane
+        PlayTrackActivityFragment newFragment = PlayTrackActivityFragment.newInstance(customTracks, position);
+
+        // TODO check hardcoded string
+        newFragment.show(getSupportFragmentManager(), "dialog");
     }
 }

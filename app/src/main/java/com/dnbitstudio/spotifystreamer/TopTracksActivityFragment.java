@@ -1,6 +1,5 @@
 package com.dnbitstudio.spotifystreamer;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -41,6 +40,7 @@ import retrofit.client.Response;
 public class TopTracksActivityFragment extends Fragment
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
+    private boolean mTwoPane;
 
     private static final String CUSTOM_TRACKS_KEY = "custom_tracks_key";
     private static final String IS_QUERY_RUNNING = "is_query_running_key";
@@ -113,10 +113,13 @@ public class TopTracksActivityFragment extends Fragment
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                Intent intent = new Intent(getActivity(), PlayTrackActivity.class);
-                intent.putParcelableArrayListExtra(PlayTrackActivityFragment.TRACKS, customTracks);
-                intent.putExtra(PlayTrackActivityFragment.TRACK_NUMBER, position);
-                startActivity(intent);
+                if (mTwoPane)
+                {
+                    ((ArtistSearchActivity) getActivity()).onItemSelected(customTracks, position);
+                } else
+                {
+                    ((TopTracksActivity) getActivity()).onItemSelected(customTracks, position);
+                }
             }
         });
 
@@ -130,6 +133,8 @@ public class TopTracksActivityFragment extends Fragment
                 performSearch(artistID);
             }
         }
+
+        mTwoPane = getResources().getBoolean(R.bool.sw600);
         // Cache default img
         // Note: It is safe to invoke fetch from any thread
         Picasso.with(getActivity()).load(R.mipmap.ic_launcher).fetch();
@@ -282,5 +287,10 @@ public class TopTracksActivityFragment extends Fragment
         {
             adapter.add(customTrack);
         }
+    }
+
+    public interface TopTracksFragmentCallback
+    {
+        void onItemSelected(ArrayList<CustomTrack> customTracks, int position);
     }
 }

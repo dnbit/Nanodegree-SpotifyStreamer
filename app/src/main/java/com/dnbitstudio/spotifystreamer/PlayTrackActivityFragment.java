@@ -1,11 +1,12 @@
 package com.dnbitstudio.spotifystreamer;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.ShareActionProvider;
 import android.view.LayoutInflater;
@@ -14,6 +15,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -32,7 +34,7 @@ import butterknife.OnClick;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class PlayTrackActivityFragment extends Fragment
+public class PlayTrackActivityFragment extends DialogFragment
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
     public static final String TRACKS = "tracks_key";
@@ -65,6 +67,18 @@ public class PlayTrackActivityFragment extends Fragment
         setHasOptionsMenu(true);
     }
 
+    public static PlayTrackActivityFragment newInstance(ArrayList<CustomTrack> customTracks, int position)
+    {
+        PlayTrackActivityFragment fragment = new PlayTrackActivityFragment();
+
+        Bundle args = new Bundle();
+        args.putParcelableArrayList(TRACKS, customTracks);
+        args.putInt(TRACK_NUMBER, position);
+
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
@@ -72,11 +86,11 @@ public class PlayTrackActivityFragment extends Fragment
         View rootview = inflater.inflate(R.layout.fragment_play_track, container, false);
         ButterKnife.inject(this, rootview);
 
-        Intent intent = getActivity().getIntent();
-        if (intent != null)
+        Bundle args = getArguments();
+        if (args != null)
         {
-            tracks = intent.getParcelableArrayListExtra(TRACKS);
-            trackNumber = intent.getIntExtra(TRACK_NUMBER, 0);
+            tracks = args.getParcelableArrayList(TRACKS);
+            trackNumber = args.getInt(TRACK_NUMBER);
 
             if (tracks.get(trackNumber) != null)
             {
@@ -174,6 +188,22 @@ public class PlayTrackActivityFragment extends Fragment
         preview_url = tracks.get(trackNumber).getPreview_url();
         launchMediaPlayer();
     }
+
+    /**
+     * The system calls this only when creating the layout in a dialog.
+     */
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState)
+    {
+        // The only reason you might override this method when using onCreateView() is
+        // to modify any dialog characteristics. For example, the dialog includes a
+        // title by default, but your custom layout might not need it. So here you can
+        // remove the dialog title, but you must call the superclass to get the Dialog.
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        return dialog;
+    }
+
 
     @OnClick(R.id.bt_media_play_pause)
     public void playPause(ImageButton button)

@@ -58,11 +58,6 @@ public class ArtistSearchActivityFragment extends Fragment
 
     public static final int MIN_IMAGE_SIZE_SMALL = 200;
 
-    public interface FragmentCallback
-    {
-        void onItemSelected(String artistID, String artistName);
-    }
-
     public ArtistSearchActivityFragment()
     {
         setHasOptionsMenu(true);
@@ -283,5 +278,10 @@ public class ArtistSearchActivityFragment extends Fragment
         {
             adapter.add(customArtist);
         }
+    }
+
+    public interface ArtistSearchFragmentCallback
+    {
+        void onItemSelected(String artistID, String artistName);
     }
 }

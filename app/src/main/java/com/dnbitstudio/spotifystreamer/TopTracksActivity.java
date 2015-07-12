@@ -6,7 +6,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class TopTracksActivity extends AppCompatActivity
+import com.dnbitstudio.spotifystreamer.models.CustomTrack;
+
+import java.util.ArrayList;
+
+public class TopTracksActivity extends AppCompatActivity implements TopTracksActivityFragment.TopTracksFragmentCallback
 {
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -58,5 +62,17 @@ public class TopTracksActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemSelected(ArrayList<CustomTrack> customTracks, int position)
+    {
+        // Note that this will be only called if it is single Pane
+        //Create intent and start new activity
+        Intent intent = new Intent(this, PlayTrackActivity.class);
+        intent.putParcelableArrayListExtra(PlayTrackActivityFragment.TRACKS, customTracks);
+        intent.putExtra(PlayTrackActivityFragment.TRACK_NUMBER, position);
+
+        startActivity(intent);
     }
 }
