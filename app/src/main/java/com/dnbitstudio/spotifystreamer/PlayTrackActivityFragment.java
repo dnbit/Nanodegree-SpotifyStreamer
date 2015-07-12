@@ -151,6 +151,14 @@ public class PlayTrackActivityFragment extends DialogFragment
         super.onStart();
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        // Set the Layout dimensions to be WRAP_CONTENT
+        // to avoid the layout to be shrunk
+        // only if we are using the fragment as a dialog
+        if (getDialog() != null)
+        {
+            getDialog().getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
     }
 
     @Override
@@ -195,15 +203,11 @@ public class PlayTrackActivityFragment extends DialogFragment
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState)
     {
-        // The only reason you might override this method when using onCreateView() is
-        // to modify any dialog characteristics. For example, the dialog includes a
-        // title by default, but your custom layout might not need it. So here you can
-        // remove the dialog title, but you must call the superclass to get the Dialog.
+        // Call the superclass to remove the dialog title
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         return dialog;
     }
-
 
     @OnClick(R.id.bt_media_play_pause)
     public void playPause(ImageButton button)
