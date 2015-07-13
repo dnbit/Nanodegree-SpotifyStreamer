@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ImageView
+        android:id="@+id/play_track_artwork"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_loading"
+        android:contentDescription="@string/album_artwork"/>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/controls_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true">
+
+            <ImageButton
+                android:id="@+id/bt_media_previous"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:src="@android:drawable/ic_media_previous"
+                android:contentDescription="@string/previous"/>
+
+            <ImageButton
+                android:id="@+id/bt_media_play_pause"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:src="@android:drawable/ic_media_pause"
+                android:tag="pause"
+                android:contentDescription="@string/play_pause"/>
+
+            <ImageButton
+                android:id="@+id/bt_media_next"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:src="@android:drawable/ic_media_next"
+                android:contentDescription="@string/next"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/time_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_above="@id/controls_row">
+
+            <TextView
+                android:id="@+id/play_track_current_time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="start|center_vertical"/>
+
+            <TextView
+                android:id="@+id/play_track_total_time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end|center_vertical"/>
+
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/play_track_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/time_row"
+            android:layout_gravity="center"/>
+
+        <TextView
+            android:id="@+id/play_track_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/play_track_seekbar"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/play_track_artist_and_album"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/play_track_name"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"/>
+
+    </RelativeLayout>
+</merge>
