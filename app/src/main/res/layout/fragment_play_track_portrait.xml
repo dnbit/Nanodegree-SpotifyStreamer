@@ -67,6 +67,7 @@
             android:layout_weight="1"
             android:adjustViewBounds="true"
             android:layout_marginRight="8dp"
+            android:layout_marginEnd="8dp"
             android:src="@android:drawable/ic_media_previous"
             android:contentDescription="@string/previous"/>
 
@@ -89,6 +90,7 @@
             android:layout_weight="1"
             android:adjustViewBounds="true"
             android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp"
             android:src="@android:drawable/ic_media_next"
             android:contentDescription="@string/next"/>
 

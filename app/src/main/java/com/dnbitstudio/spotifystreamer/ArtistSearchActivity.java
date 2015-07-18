@@ -80,8 +80,6 @@ public class ArtistSearchActivity extends AppCompatActivity
         // Note that this will be only called from
         // if it is 2 Pane
         PlayTrackActivityFragment newFragment = PlayTrackActivityFragment.newInstance(customTracks, position);
-
-        // TODO check hardcoded string
-        newFragment.show(getSupportFragmentManager(), "dialog");
+        newFragment.show(getSupportFragmentManager(), PlayTrackActivityFragment.PLAY_TRACK_FRAGMENT_TAG);
     }
 }

@@ -46,6 +46,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.dnbitstudio.spotifystreamer.ArtistSearchActivity"/>
         </activity>
+
+        <service android:name=".services.PlayTrackService"/>
     </application>
 
 </manifest>
