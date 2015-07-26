@@ -8,9 +8,12 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.ResultReceiver;
 
 import com.dnbitstudio.spotifystreamer.PlayTrackActivityFragment;
 import com.dnbitstudio.spotifystreamer.models.CustomTrack;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,6 +22,8 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         MediaPlayer.OnErrorListener
 {
     public static final String ARGS_BUNDLE = "args_bundle_key";
+    public static final String DURATION = "duration_key";
+    public static final String RECEIVER_TAG = "receiverTag_key";
     private final String LOG_TAG = this.getClass().getSimpleName();
     private final IBinder playTrackBinder = new PlayTrackBinder();
     private MediaPlayer mediaPlayer;
@@ -26,6 +31,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     private int trackNumber;
     private int trackPosition;
     private CustomTrack track;
+    private ResultReceiver playTrackResultReceiver;
 
     @Override
     public void onCreate()
@@ -39,7 +45,14 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     @Override
     public IBinder onBind(Intent intent)
     {
+        playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
         return playTrackBinder;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent)
+    {
+        return super.onUnbind(intent);
     }
 
     @Override
@@ -63,6 +76,10 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     @Override
     public void onPrepared(MediaPlayer mediaPlayer)
     {
+        Bundle returnBundle = new Bundle();
+
+        returnBundle.putInt(DURATION, mediaPlayer.getDuration());
+        playTrackResultReceiver.send(0, returnBundle);
         mediaPlayer.start();
     }
 
@@ -81,17 +98,46 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         mediaPlayer.setOnErrorListener(this);
     }
 
-    public void playTrack()
+    public void playNewTrack()
     {
         try
         {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(tracks.get(trackNumber).getPreview_url());
-            mediaPlayer.prepareAsync();
+
+            // fetch image before starting to play the track
+            String url = tracks.get(trackNumber).getUrl_large();
+            if (url != null)
+            {
+                Picasso.with(getApplicationContext()).
+                        load(url)
+                        .fetch(new Callback()
+                        {
+                            @Override
+                            public void onSuccess()
+                            {
+                                mediaPlayer.prepareAsync();
+                            }
+
+                            @Override
+                            public void onError()
+                            {
+                                mediaPlayer.prepareAsync();
+                            }
+                        });
+            } else
+            {
+                mediaPlayer.prepareAsync();
+            }
         } catch (IOException e)
         {
             e.printStackTrace();
         }
+    }
+
+    public boolean isPlaying()
+    {
+        return mediaPlayer.isPlaying();
     }
 
     // **************************
@@ -117,7 +163,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         {
             trackNumber = --trackNumber;
         }
-        playTrack();
+        playNewTrack();
     }
 
     public void playNext()
@@ -130,22 +176,40 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         {
             trackNumber = ++trackNumber;
         }
-        playTrack();
+        playNewTrack();
+    }
+
+    // *********************************
+    //    MEDIAPLAYER CONTROL METHODS
+    // *********************************
+    public void start()
+    {
+        mediaPlayer.start();
+    }
+
+    public void pause()
+    {
+        mediaPlayer.pause();
+    }
+
+    public void seekTo(int millis)
+    {
+        mediaPlayer.seekTo(millis);
+    }
+
+    public int getDuration()
+    {
+        return mediaPlayer.getDuration();
+    }
+
+    public int getPosition()
+    {
+        return mediaPlayer.getCurrentPosition();
     }
 
     // *************************
     //    GETTERS AND SETTERS
     // *************************
-    public MediaPlayer getMediaPlayer()
-    {
-        return mediaPlayer;
-    }
-
-    public void setMediaPlayer(MediaPlayer mediaPlayer)
-    {
-        this.mediaPlayer = mediaPlayer;
-    }
-
     public ArrayList<CustomTrack> getTracks()
     {
         return tracks;

@@ -2,6 +2,7 @@ package com.dnbitstudio.spotifystreamer;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -77,9 +78,23 @@ public class ArtistSearchActivity extends AppCompatActivity
     @Override
     public void onItemSelected(ArrayList<CustomTrack> customTracks, int position)
     {
-        // Note that this will be only called from
+        // Note that this will be only called
         // if it is 2 Pane
-        PlayTrackActivityFragment newFragment = PlayTrackActivityFragment.newInstance(customTracks, position);
-        newFragment.show(getSupportFragmentManager(), PlayTrackActivityFragment.PLAY_TRACK_FRAGMENT_TAG);
+        // TODO is all this required?
+        PlayTrackActivityFragment fragment =
+                (PlayTrackActivityFragment) getSupportFragmentManager()
+                        .findFragmentByTag(PlayTrackActivityFragment.PLAY_TRACK_FRAGMENT_TAG);
+        if (fragment != null)
+        {
+            //FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            //fragmentTransaction.add(fragment, PlayTrackActivityFragment.PLAY_TRACK_FRAGMENT_TAG);
+            fragment.show(getSupportFragmentManager(), PlayTrackActivityFragment.PLAY_TRACK_FRAGMENT_TAG);
+        } else
+        {
+            PlayTrackActivityFragment newFragment = PlayTrackActivityFragment.newInstance(customTracks, position);
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.add(newFragment, PlayTrackActivityFragment.PLAY_TRACK_FRAGMENT_TAG);
+            fragmentTransaction.commit();
+        }
     }
 }
