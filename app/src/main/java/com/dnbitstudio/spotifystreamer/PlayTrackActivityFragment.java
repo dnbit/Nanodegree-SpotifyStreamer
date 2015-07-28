@@ -1,6 +1,5 @@
 package com.dnbitstudio.spotifystreamer;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -48,7 +47,6 @@ public class PlayTrackActivityFragment extends DialogFragment
     public static final String TRACK_NUMBER = "track_number_key";
     public static final String TRACK_SHARE_INTENT = " #Spotify Streamer";
     public static final String PLAY_TRACK_FRAGMENT_TAG = "PTF_TAG";
-    private Activity activity;
 
     @InjectView(R.id.play_track_artist_and_album)
     TextView artistAndAlbum;
@@ -227,15 +225,7 @@ public class PlayTrackActivityFragment extends DialogFragment
         };
 
         // Update Seekbar on UI thread
-        // getActivity is sometimes null here
-        activity.runOnUiThread(seekbarRunnable);
-    }
-
-    @Override
-    public void onAttach(Activity activity)
-    {
-        super.onAttach(activity);
-        this.activity = activity;
+        getActivity().runOnUiThread(seekbarRunnable);
     }
 
     public void updateTrackDetails()

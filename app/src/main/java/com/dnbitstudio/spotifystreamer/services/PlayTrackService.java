@@ -45,7 +45,6 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     @Override
     public IBinder onBind(Intent intent)
     {
-        playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
         return playTrackBinder;
     }
 
@@ -70,6 +69,10 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
             }
         }
 
+        // set the receiver every time onStartCommand is called
+        // to ensure we use the fragment which is actually
+        // associated with our activity
+        playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
         return super.onStartCommand(intent, flags, startId);
     }
 
