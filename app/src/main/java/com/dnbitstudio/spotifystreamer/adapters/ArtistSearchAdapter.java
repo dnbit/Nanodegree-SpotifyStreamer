@@ -14,8 +14,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 
 public class ArtistSearchAdapter extends ArrayAdapter<CustomArtist>
 {
@@ -74,14 +74,14 @@ public class ArtistSearchAdapter extends ArrayAdapter<CustomArtist>
 
     static class ViewHolder
     {
-        @InjectView(R.id.list_item_artist_search_thumbnail)
+        @Bind(R.id.list_item_artist_search_thumbnail)
         ImageView image;
-        @InjectView(R.id.list_item_artist_search_name)
+        @Bind(R.id.list_item_artist_search_name)
         TextView text;
 
         public ViewHolder(View view)
         {
-            ButterKnife.inject(this, view);
+            ButterKnife.bind(this, view);
         }
     }
 }

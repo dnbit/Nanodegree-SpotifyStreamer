@@ -14,8 +14,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 
 public class TopTracksAdapter extends ArrayAdapter<CustomTrack>
 {
@@ -74,14 +74,14 @@ public class TopTracksAdapter extends ArrayAdapter<CustomTrack>
 
     static class ViewHolder
     {
-        @InjectView(R.id.list_item_top_tracks_thumbnail)
+        @Bind(R.id.list_item_top_tracks_thumbnail)
         ImageView image;
-        @InjectView(R.id.list_item_top_tracks_track_name)
+        @Bind(R.id.list_item_top_tracks_track_name)
         TextView text;
 
         public ViewHolder(View view)
         {
-            ButterKnife.inject(this, view);
+            ButterKnife.bind(this, view);
         }
     }
 }

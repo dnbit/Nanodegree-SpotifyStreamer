@@ -11,20 +11,22 @@ import com.dnbitstudio.spotifystreamer.models.CustomTrack;
 
 import java.util.ArrayList;
 
+import butterknife.BindBool;
+import butterknife.ButterKnife;
+
 public class ArtistSearchActivity extends AppCompatActivity
         implements ArtistSearchActivityFragment.ArtistSearchFragmentCallback,
         TopTracksActivityFragment.TopTracksFragmentCallback
 {
-    private boolean mTwoPane;
+    @BindBool(R.bool.sw600)
+    boolean mTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_artist_search);
-
-        // if it takes the boolean from sw600 it is two pane
-        mTwoPane = getResources().getBoolean(R.bool.sw600);
+        ButterKnife.bind(this);
     }
 
     @Override

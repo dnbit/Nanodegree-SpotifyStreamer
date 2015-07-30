@@ -18,8 +18,8 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
@@ -28,7 +28,6 @@ import kaaes.spotify.webapi.android.models.Image;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
-
 
 /**
  * A fragment for the artist search
@@ -44,11 +43,11 @@ public class ArtistSearchActivityFragment extends Fragment
     private static final String ARTIST_QUERY = "artist_query_key";
     private ArtistSearchAdapter adapter;
 
-    @InjectView(R.id.search_artist_name)
+    @Bind(R.id.search_artist_name)
     SearchView searchView;
-    @InjectView(R.id.listview_artist_search)
+    @Bind(R.id.listview_artist_search)
     ListView listView;
-    @InjectView(R.id.search_progress_bar)
+    @Bind(R.id.search_progress_bar)
     ProgressBar progressBar;
 
     // variables to manage rotation
@@ -68,7 +67,7 @@ public class ArtistSearchActivityFragment extends Fragment
                              Bundle savedInstanceState)
     {
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
-        ButterKnife.inject(this, rootView);
+        ButterKnife.bind(this, rootView);
 
         // Set the searchView
         searchView.setQueryHint(getString(R.string.searchview_hint));

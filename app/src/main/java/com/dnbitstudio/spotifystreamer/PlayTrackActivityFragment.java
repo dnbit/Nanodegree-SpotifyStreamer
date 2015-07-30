@@ -32,8 +32,9 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
+import butterknife.Bind;
+import butterknife.BindBool;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import butterknife.OnClick;
 
 /**
@@ -48,18 +49,20 @@ public class PlayTrackActivityFragment extends DialogFragment
     public static final String TRACK_SHARE_INTENT = " #Spotify Streamer";
     public static final String PLAY_TRACK_FRAGMENT_TAG = "PTF_TAG";
 
-    @InjectView(R.id.play_track_artist_and_album)
+    @Bind(R.id.play_track_artist_and_album)
     TextView artistAndAlbum;
-    @InjectView(R.id.play_track_artwork)
+    @Bind(R.id.play_track_artwork)
     ImageView artwork;
-    @InjectView(R.id.play_track_name)
+    @Bind(R.id.play_track_name)
     TextView trackName;
-    @InjectView(R.id.play_track_seekbar)
+    @Bind(R.id.play_track_seekbar)
     SeekBar seekBar;
-    @InjectView(R.id.play_track_current_time)
+    @Bind(R.id.play_track_current_time)
     TextView currentTime;
-    @InjectView(R.id.play_track_total_time)
+    @Bind(R.id.play_track_total_time)
     TextView totalTime;
+    @BindBool(R.bool.sw600)
+    boolean mTwoPane;
 
     private final Handler mHandler = new Handler();
     private PlayTrackService playTrackService;
@@ -68,7 +71,6 @@ public class PlayTrackActivityFragment extends DialogFragment
     private boolean restored = false;
     public PlayTrackResultReceiver playTrackResultReceiver;
     private int duration;
-    private boolean mTwoPane;
 
     public PlayTrackActivityFragment()
     {
@@ -92,7 +94,7 @@ public class PlayTrackActivityFragment extends DialogFragment
                              Bundle savedInstanceState)
     {
         View rootview = inflater.inflate(R.layout.fragment_play_track, container, false);
-        ButterKnife.inject(this, rootview);
+        ButterKnife.bind(this, rootview);
 
         if (savedInstanceState != null)
         {
@@ -102,7 +104,6 @@ public class PlayTrackActivityFragment extends DialogFragment
         playTrackResultReceiver = new PlayTrackResultReceiver(new Handler());
         playTrackResultReceiver.setReceiver(this);
 
-        mTwoPane = getResources().getBoolean(R.bool.sw600);
         return rootview;
     }
 

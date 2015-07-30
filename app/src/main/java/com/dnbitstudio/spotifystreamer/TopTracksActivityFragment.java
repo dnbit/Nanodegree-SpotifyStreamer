@@ -28,8 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import butterknife.Bind;
+import butterknife.BindBool;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Image;
@@ -46,7 +47,6 @@ import retrofit.client.Response;
 public class TopTracksActivityFragment extends Fragment
 {
     private final String LOG_TAG = this.getClass().getSimpleName();
-    private boolean mTwoPane;
 
     private static final String CUSTOM_TRACKS_KEY = "custom_tracks_key";
     private static final String IS_QUERY_RUNNING = "is_query_running_key";
@@ -58,12 +58,14 @@ public class TopTracksActivityFragment extends Fragment
     private TopTracksAdapter adapter;
     private ShareActionProvider shareActionProvider;
 
-    @InjectView(R.id.listview_top_artist)
+    @Bind(R.id.listview_top_artist)
     ListView listView;
-    @InjectView(R.id.search_progress_bar)
+    @Bind(R.id.search_progress_bar)
     ProgressBar progressBar;
-    @InjectView(R.id.no_results)
+    @Bind(R.id.no_results)
     TextView tvNoResults;
+    @BindBool(R.bool.sw600)
+    boolean mTwoPane;
 
     // variables to manage rotation
     private ArrayList<CustomTrack> customTracks;
@@ -95,7 +97,7 @@ public class TopTracksActivityFragment extends Fragment
                              Bundle savedInstanceState)
     {
         View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
-        ButterKnife.inject(this, rootView);
+        ButterKnife.bind(this, rootView);
 
         // Initialize the adapter
         adapter = new TopTracksAdapter(getActivity(),
@@ -153,7 +155,6 @@ public class TopTracksActivityFragment extends Fragment
             }
         }
 
-        mTwoPane = getResources().getBoolean(R.bool.sw600);
         // Cache default img
         // Note: It is safe to invoke fetch from any thread
         Picasso.with(getActivity()).load(R.mipmap.ic_launcher).fetch();
