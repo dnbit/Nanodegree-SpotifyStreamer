@@ -1,10 +1,16 @@
 package com.dnbitstudio.spotifystreamer;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -46,9 +52,11 @@ public class TopTracksActivityFragment extends Fragment
     private static final String IS_QUERY_RUNNING = "is_query_running_key";
     public static final String ARTIST_ID = "artistID";
     public static final String ARTIST_NAME = "artistName";
+    public static final String IS_SHARE_VISIBLE = "isSharedVisible";
     String artistName;
 
     private TopTracksAdapter adapter;
+    private ShareActionProvider shareActionProvider;
 
     @InjectView(R.id.listview_top_artist)
     ListView listView;
@@ -63,9 +71,11 @@ public class TopTracksActivityFragment extends Fragment
 
     public static final int MIN_IMAGE_SIZE_SMALL = 200;
     public static final int MIN_IMAGE_SIZE_LARGE = 640;
+    private boolean isShareVisible = false;
 
     public TopTracksActivityFragment()
     {
+        setHasOptionsMenu(true);
     }
 
     public static TopTracksActivityFragment newInstance(String artistID, String artistName)
@@ -104,6 +114,8 @@ public class TopTracksActivityFragment extends Fragment
             {
                 toggleVisibility();
             }
+
+            isShareVisible = savedInstanceState.getBoolean(IS_SHARE_VISIBLE);
         }
 
         listView.setAdapter(adapter);
@@ -115,6 +127,13 @@ public class TopTracksActivityFragment extends Fragment
             {
                 if (mTwoPane)
                 {
+                    isShareVisible = true;
+                    // Attach an intent to this ShareActionProvider.
+                    if (shareActionProvider != null)
+                    {
+                        shareActionProvider.
+                                setShareIntent(createShareTrackIntent(customTracks, position));
+                    }
                     ((ArtistSearchActivity) getActivity()).onItemSelected(customTracks, position);
                 } else
                 {
@@ -143,11 +162,29 @@ public class TopTracksActivityFragment extends Fragment
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+    {
+        inflater.inflate(R.menu.menu_play_track_fragment, menu);
+
+        // Retrieve the share menu item
+        MenuItem menuItem = menu.findItem(R.id.action_share);
+
+        if (!isShareVisible)
+        {
+            menuItem.setVisible(false);
+        }
+
+        // Get the provider to a field
+        shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(CUSTOM_TRACKS_KEY, customTracks);
         outState.putBoolean(IS_QUERY_RUNNING, isQueryRunning);
+        outState.putBoolean(IS_SHARE_VISIBLE, isShareVisible);
     }
 
     public void performSearch(String artistID)
@@ -287,6 +324,19 @@ public class TopTracksActivityFragment extends Fragment
         {
             adapter.add(customTrack);
         }
+    }
+
+    private Intent createShareTrackIntent(List<CustomTrack> customTracks, int position)
+    {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        //noinspection deprecation
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        shareIntent.setType("text/plain");
+
+        CustomTrack track = customTracks.get(position);
+
+        shareIntent.putExtra(Intent.EXTRA_TEXT, track.getPreview_url() + PlayTrackActivityFragment.TRACK_SHARE_INTENT);
+        return shareIntent;
     }
 
     public interface TopTracksFragmentCallback

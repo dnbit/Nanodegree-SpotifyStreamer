@@ -68,6 +68,7 @@ public class PlayTrackActivityFragment extends DialogFragment
     private boolean restored = false;
     public PlayTrackResultReceiver playTrackResultReceiver;
     private int duration;
+    private boolean mTwoPane;
 
     public PlayTrackActivityFragment()
     {
@@ -101,6 +102,7 @@ public class PlayTrackActivityFragment extends DialogFragment
         playTrackResultReceiver = new PlayTrackResultReceiver(new Handler());
         playTrackResultReceiver.setReceiver(this);
 
+        mTwoPane = getResources().getBoolean(R.bool.sw600);
         return rootview;
     }
 
@@ -112,6 +114,10 @@ public class PlayTrackActivityFragment extends DialogFragment
         // Retrieve the share menu item
         MenuItem menuItem = menu.findItem(R.id.action_share);
 
+        if (mTwoPane)
+        {
+            menuItem.setVisible(false);
+        }
         // Get the provider to a field
         shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
     }
