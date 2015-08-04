@@ -63,6 +63,7 @@ public class PlayTrackActivityFragment extends DialogFragment
     TextView totalTime;
     @BindBool(R.bool.sw600)
     boolean mTwoPane;
+    private ImageButton playPauseButton;
 
     private final Handler mHandler = new Handler();
     private PlayTrackService playTrackService;
@@ -71,6 +72,7 @@ public class PlayTrackActivityFragment extends DialogFragment
     private boolean restored = false;
     public PlayTrackResultReceiver playTrackResultReceiver;
     private int duration;
+    private Runnable seekbarRunnable;
 
     public PlayTrackActivityFragment()
     {
@@ -96,11 +98,14 @@ public class PlayTrackActivityFragment extends DialogFragment
         View rootview = inflater.inflate(R.layout.fragment_play_track, container, false);
         ButterKnife.bind(this, rootview);
 
+        playPauseButton = (ImageButton) rootview.findViewById(R.id.bt_media_play_pause);
+
         if (savedInstanceState != null)
         {
             restored = true;
         }
 
+        // Initialize the custom result receiver
         playTrackResultReceiver = new PlayTrackResultReceiver(new Handler());
         playTrackResultReceiver.setReceiver(this);
 
@@ -115,6 +120,7 @@ public class PlayTrackActivityFragment extends DialogFragment
         // Retrieve the share menu item
         MenuItem menuItem = menu.findItem(R.id.action_share);
 
+        // if it is 2 Pane this is already shown
         if (mTwoPane)
         {
             menuItem.setVisible(false);
@@ -132,6 +138,8 @@ public class PlayTrackActivityFragment extends DialogFragment
             playIntent = new Intent(getActivity(), PlayTrackService.class);
             playIntent.putExtra(PlayTrackService.ARGS_BUNDLE, getArguments());
             playIntent.putExtra(PlayTrackService.RECEIVER_TAG, playTrackResultReceiver);
+
+            // When rotating the service is already started
             if (!restored)
             {
                 getActivity().startService(playIntent);
@@ -157,7 +165,6 @@ public class PlayTrackActivityFragment extends DialogFragment
     public void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
-        outState.putInt("trackNumber", playTrackService.getTrackNumber());
     }
 
     /**
@@ -185,15 +192,33 @@ public class PlayTrackActivityFragment extends DialogFragment
         String drawable = (String) button.getTag();
         if (drawable.equals("play"))
         {
-            button.setTag("pause");
-            button.setImageResource(android.R.drawable.ic_media_pause);
-            playTrackService.restartTrack();
+            togglePlay();
         } else if (drawable.equals("pause"))
         {
-            button.setTag("play");
-            button.setImageResource(android.R.drawable.ic_media_play);
-            playTrackService.pauseTrack();
+            togglePause();
         }
+    }
+
+    public void togglePause()
+    {
+        // update the play-pause button
+        playPauseButton.setTag("play");
+        playPauseButton.setImageResource(android.R.drawable.ic_media_play);
+
+        // pause track and stop runnable
+        playTrackService.pauseTrack();
+        mHandler.removeCallbacks(seekbarRunnable);
+    }
+
+    public void togglePlay()
+    {
+        // update the play-pause button
+        playPauseButton.setTag("pause");
+        playPauseButton.setImageResource(android.R.drawable.ic_media_pause);
+
+        // restart track and post runnable
+        playTrackService.restartTrack();
+        mHandler.post(seekbarRunnable);
     }
 
     @OnClick(R.id.bt_media_next)
@@ -204,35 +229,42 @@ public class PlayTrackActivityFragment extends DialogFragment
 
     public void launchMediaPlayer()
     {
-        long millis = playTrackService.getDuration();
-
-        duration = (int) Math.round(millis / 1000.0);
-        seekBar.setMax(duration);
-
-        totalTime.setText(setSecondsString(duration));
+//        long millis = playTrackService.getDuration();
+//
+//        duration = (int) Math.round(millis / 1000.0);
+//        seekBar.setMax(duration);
+//
+//        totalTime.setText(setSecondsString(duration));
         updateTrackDetails();
 
-        Runnable seekbarRunnable = new Runnable()
+        seekbarRunnable = new Runnable()
         {
             @Override
             public void run()
             {
-                int seekbarPosition = playTrackService.getPosition() / 1000;
-                seekBar.setProgress(seekbarPosition);
-                currentTime.setText(setSecondsString(seekbarPosition));
+                updateSeekbarAndCurrentTime();
 
-                if (seekBar.getProgress() == duration)
-                {
-                    mHandler.removeCallbacks(this);
-                } else
+//                if (seekBar.getProgress()  == duration)
+//                {
+//                    mHandler.removeCallbacks(this);
+//                    togglePause();
+//                } else
+//                {
+                if (!playTrackService.isTrackCompleted())
                 {
                     mHandler.postDelayed(this, 1000);
                 }
+//                }
             }
         };
 
         // Update Seekbar on UI thread
-        getActivity().runOnUiThread(seekbarRunnable);
+        // only if the track is been played
+        if (playTrackService.isPlaying())
+        {
+            getActivity().runOnUiThread(seekbarRunnable);
+        }
+        updateSeekbarAndCurrentTime();
     }
 
     public void updateTrackDetails()
@@ -243,6 +275,14 @@ public class PlayTrackActivityFragment extends DialogFragment
             shareActionProvider.setShareIntent(createShareTrackIntent());
         }
 
+        long millis = playTrackService.getDuration();
+
+        duration = (int) Math.round(millis / 1000.0);
+
+        seekBar.setMax(duration);
+
+        totalTime.setText(setSecondsString(duration));
+
         CustomTrack track = playTrackService.getTracks().get(playTrackService.getTrackNumber());
         artistAndAlbum.setText(track.getArtist() + "\n" + track.getAlbum());
         Picasso.with(getActivity())
@@ -252,6 +292,20 @@ public class PlayTrackActivityFragment extends DialogFragment
                 .into(artwork);
 
         trackName.setText(track.getName());
+    }
+
+    public void updateSeekbarAndCurrentTime()
+    {
+        if (!playTrackService.isTrackCompleted())
+        {
+            int seekbarPosition = Math.round(playTrackService.getPosition() / 1000);
+            seekBar.setProgress(seekbarPosition);
+            currentTime.setText(setSecondsString(seekbarPosition));
+        } else
+        {
+            seekBar.setProgress(duration);
+            currentTime.setText(setSecondsString(duration));
+        }
     }
 
     public String setSecondsString(int duration)
@@ -321,6 +375,12 @@ public class PlayTrackActivityFragment extends DialogFragment
                 launchMediaPlayer();
             }
 
+            if (playTrackService.isTrackCompleted())
+            {
+                playPauseButton.setTag("play");
+                playPauseButton.setImageResource(android.R.drawable.ic_media_play);
+            }
+
             if (!restored)
             {
                 playTrackService.playNewTrack();
@@ -336,6 +396,17 @@ public class PlayTrackActivityFragment extends DialogFragment
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData)
     {
-        launchMediaPlayer();
+        if (resultCode == PlayTrackService.NOTIFY_MP_PREPARED)
+        {
+            launchMediaPlayer();
+        }
+
+        if (resultCode == PlayTrackService.NOTIFY_TRACK_COMPLETED)
+        {
+            mHandler.removeCallbacks(seekbarRunnable);
+            playPauseButton.setTag("play");
+            playPauseButton.setImageResource(android.R.drawable.ic_media_play);
+            updateSeekbarAndCurrentTime();
+        }
     }
 }

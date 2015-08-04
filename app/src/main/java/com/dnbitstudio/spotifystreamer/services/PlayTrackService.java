@@ -19,11 +19,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class PlayTrackService extends Service implements MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnErrorListener
+        MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener
 {
     public static final String ARGS_BUNDLE = "args_bundle_key";
-    public static final String DURATION = "duration_key";
     public static final String RECEIVER_TAG = "receiverTag_key";
+    public static final int NOTIFY_MP_PREPARED = 0;
+    public static final int NOTIFY_TRACK_COMPLETED = 1;
     private final String LOG_TAG = this.getClass().getSimpleName();
     private final IBinder playTrackBinder = new PlayTrackBinder();
     private MediaPlayer mediaPlayer;
@@ -32,6 +33,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     private int trackPosition;
     private CustomTrack track;
     private ResultReceiver playTrackResultReceiver;
+    private boolean trackCompleted = false;
 
     @Override
     public void onCreate()
@@ -80,9 +82,8 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     public void onPrepared(MediaPlayer mediaPlayer)
     {
         Bundle returnBundle = new Bundle();
+        playTrackResultReceiver.send(NOTIFY_MP_PREPARED, returnBundle);
 
-        returnBundle.putInt(DURATION, mediaPlayer.getDuration());
-        playTrackResultReceiver.send(0, returnBundle);
         mediaPlayer.start();
     }
 
@@ -93,12 +94,21 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         return false;
     }
 
+    @Override
+    public void onCompletion(MediaPlayer mp)
+    {
+        setTrackCompleted(true);
+        Bundle returnBundle = new Bundle();
+        playTrackResultReceiver.send(NOTIFY_TRACK_COMPLETED, returnBundle);
+    }
+
     public void initMediaPlayer()
     {
         mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnErrorListener(this);
+        mediaPlayer.setOnCompletionListener(this);
     }
 
     public void playNewTrack()
@@ -153,7 +163,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
 
     public void restartTrack()
     {
-        mediaPlayer.start();
+        start();
     }
 
     public void playPrevious()
@@ -187,6 +197,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     // *********************************
     public void start()
     {
+        setTrackCompleted(false);
         mediaPlayer.start();
     }
 
@@ -251,6 +262,16 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     public void setTrack(CustomTrack track)
     {
         this.track = track;
+    }
+
+    public boolean isTrackCompleted()
+    {
+        return trackCompleted;
+    }
+
+    public void setTrackCompleted(boolean trackCompleted)
+    {
+        this.trackCompleted = trackCompleted;
     }
 
     // *************************
