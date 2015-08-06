@@ -59,22 +59,25 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        Bundle args = intent.getBundleExtra(ARGS_BUNDLE);
-        if (args != null && args.size() > 0)
+        if (intent != null)
         {
-            tracks = args.getParcelableArrayList(PlayTrackActivityFragment.TRACKS);
-            trackNumber = args.getInt(PlayTrackActivityFragment.TRACK_NUMBER);
-
-            if (tracks.get(trackNumber) != null)
+            Bundle args = intent.getBundleExtra(ARGS_BUNDLE);
+            if (args != null && args.size() > 0)
             {
-                track = tracks.get(trackNumber);
-            }
-        }
+                tracks = args.getParcelableArrayList(PlayTrackActivityFragment.TRACKS);
+                trackNumber = args.getInt(PlayTrackActivityFragment.TRACK_NUMBER);
 
-        // set the receiver every time onStartCommand is called
-        // to ensure we use the fragment which is actually
-        // associated with our activity
-        playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
+                if (tracks.get(trackNumber) != null)
+                {
+                    track = tracks.get(trackNumber);
+                }
+            }
+
+            // set the receiver every time onStartCommand is called
+            // to ensure we use the fragment which is actually
+            // associated with our activity
+            playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
