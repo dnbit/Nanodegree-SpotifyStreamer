@@ -29,11 +29,12 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     private final IBinder playTrackBinder = new PlayTrackBinder();
     private MediaPlayer mediaPlayer;
     private ArrayList<CustomTrack> tracks;
-    private int trackNumber;
+    private int trackNumber = -1;
     private int trackPosition;
     private CustomTrack track;
     private ResultReceiver playTrackResultReceiver;
     private boolean trackCompleted = false;
+    private boolean sameTrack = false;
 
     @Override
     public void onCreate()
@@ -61,9 +62,17 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     {
         if (intent != null)
         {
+            // set the receiver every time onStartCommand is called
+            // to ensure we use the fragment which is actually
+            // associated with our activity
+            playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
+
             Bundle args = intent.getBundleExtra(ARGS_BUNDLE);
             if (args != null && args.size() > 0)
             {
+                boolean same = checkIfSameTrack(args);
+                setSameTrack(same);
+
                 tracks = args.getParcelableArrayList(PlayTrackActivityFragment.TRACKS);
                 trackNumber = args.getInt(PlayTrackActivityFragment.TRACK_NUMBER);
 
@@ -72,11 +81,6 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
                     track = tracks.get(trackNumber);
                 }
             }
-
-            // set the receiver every time onStartCommand is called
-            // to ensure we use the fragment which is actually
-            // associated with our activity
-            playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -114,12 +118,40 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         mediaPlayer.setOnCompletionListener(this);
     }
 
+    public boolean checkIfSameTrack(Bundle args)
+    {
+        boolean same = false;
+        int newTrackNumber = args.getInt(PlayTrackActivityFragment.TRACK_NUMBER);
+        // if track number is the same it may be the same track
+        if (trackNumber == newTrackNumber)
+        {
+            ArrayList<CustomTrack> newTracks = args.getParcelableArrayList(PlayTrackActivityFragment.TRACKS);
+            if (newTracks != null && newTracks.size() >= trackNumber)
+            {
+                CustomTrack newTrack = newTracks.get(trackNumber);
+
+                // if the preview url is the same then it is the same track
+                if (newTrack.getPreview_url().equals(track.getPreview_url()))
+                {
+                    same = true;
+                }
+            }
+        }
+        return same;
+    }
+
     public void playNewTrack()
     {
         try
         {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(tracks.get(trackNumber).getPreview_url());
+
+            // if we are playing a new track then it is not the same track
+            setSameTrack(false);
+
+            // and it is starting so it is not completed
+            setTrackCompleted(false);
 
             // fetch image before starting to play the track
             String url = tracks.get(trackNumber).getUrl_large();
@@ -200,7 +232,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     // *********************************
     public void start()
     {
-        setTrackCompleted(false);
+//        setTrackCompleted(false);
         mediaPlayer.start();
     }
 
@@ -275,6 +307,16 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     public void setTrackCompleted(boolean trackCompleted)
     {
         this.trackCompleted = trackCompleted;
+    }
+
+    public boolean isSameTrack()
+    {
+        return sameTrack;
+    }
+
+    public void setSameTrack(boolean sameTrack)
+    {
+        this.sameTrack = sameTrack;
     }
 
     // *************************

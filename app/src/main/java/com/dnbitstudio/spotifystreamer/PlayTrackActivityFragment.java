@@ -193,32 +193,40 @@ public class PlayTrackActivityFragment extends DialogFragment
         if (drawable.equals("play"))
         {
             togglePlay();
+            togglePlayButton();
         } else if (drawable.equals("pause"))
         {
             togglePause();
+            togglePauseButton();
         }
     }
 
     public void togglePause()
     {
-        // update the play-pause button
-        playPauseButton.setTag("play");
-        playPauseButton.setImageResource(android.R.drawable.ic_media_play);
-
         // pause track and stop runnable
         playTrackService.pauseTrack();
         mHandler.removeCallbacks(seekbarRunnable);
     }
 
+    public void togglePauseButton()
+    {
+        // update the play-pause button
+        playPauseButton.setTag("play");
+        playPauseButton.setImageResource(android.R.drawable.ic_media_play);
+    }
+
     public void togglePlay()
+    {
+        // restart track and post runnable
+        playTrackService.restartTrack();
+        mHandler.post(seekbarRunnable);
+    }
+
+    public void togglePlayButton()
     {
         // update the play-pause button
         playPauseButton.setTag("pause");
         playPauseButton.setImageResource(android.R.drawable.ic_media_pause);
-
-        // restart track and post runnable
-        playTrackService.restartTrack();
-        mHandler.post(seekbarRunnable);
     }
 
     @OnClick(R.id.bt_media_next)
@@ -229,12 +237,6 @@ public class PlayTrackActivityFragment extends DialogFragment
 
     public void launchMediaPlayer()
     {
-//        long millis = playTrackService.getDuration();
-//
-//        duration = (int) Math.round(millis / 1000.0);
-//        seekBar.setMax(duration);
-//
-//        totalTime.setText(setSecondsString(duration));
         updateTrackDetails();
 
         seekbarRunnable = new Runnable()
@@ -244,17 +246,10 @@ public class PlayTrackActivityFragment extends DialogFragment
             {
                 updateSeekbarAndCurrentTime();
 
-//                if (seekBar.getProgress()  == duration)
-//                {
-//                    mHandler.removeCallbacks(this);
-//                    togglePause();
-//                } else
-//                {
                 if (!playTrackService.isTrackCompleted())
                 {
                     mHandler.postDelayed(this, 1000);
                 }
-//                }
             }
         };
 
@@ -370,20 +365,24 @@ public class PlayTrackActivityFragment extends DialogFragment
                 }
             });
 
-            if (restored)
-            {
-                launchMediaPlayer();
-            }
-
             if (playTrackService.isTrackCompleted())
             {
-                playPauseButton.setTag("play");
-                playPauseButton.setImageResource(android.R.drawable.ic_media_play);
+                togglePlayButton();
             }
 
-            if (!restored)
+            // if it is not restored and it is not same track
+            // we play a new track
+            if (!restored && !playTrackService.isSameTrack())
             {
                 playTrackService.playNewTrack();
+            } else
+            {
+                if (playTrackService.isSameTrack() && !playTrackService.isPlaying())
+                {
+                    togglePauseButton();
+                }
+
+                launchMediaPlayer();
             }
         }
 
