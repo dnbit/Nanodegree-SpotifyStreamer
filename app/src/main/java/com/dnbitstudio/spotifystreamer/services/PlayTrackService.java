@@ -1,5 +1,7 @@
 package com.dnbitstudio.spotifystreamer.services;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -9,14 +11,21 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.ResultReceiver;
+import android.support.v4.app.NotificationCompat;
+import android.widget.RemoteViews;
 
+import com.dnbitstudio.spotifystreamer.ArtistSearchActivity;
+import com.dnbitstudio.spotifystreamer.PlayTrackActivity;
 import com.dnbitstudio.spotifystreamer.PlayTrackActivityFragment;
+import com.dnbitstudio.spotifystreamer.R;
 import com.dnbitstudio.spotifystreamer.models.CustomTrack;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
+import butterknife.BindBool;
 
 public class PlayTrackService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener
@@ -25,6 +34,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     public static final String RECEIVER_TAG = "receiverTag_key";
     public static final int NOTIFY_MP_PREPARED = 0;
     public static final int NOTIFY_TRACK_COMPLETED = 1;
+    public static final int NOTIFICATION_ID = 0;
     private final String LOG_TAG = this.getClass().getSimpleName();
     private final IBinder playTrackBinder = new PlayTrackBinder();
     private MediaPlayer mediaPlayer;
@@ -35,6 +45,8 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     private ResultReceiver playTrackResultReceiver;
     private boolean trackCompleted = false;
     private boolean sameTrack = false;
+    @BindBool(R.bool.sw600)
+    boolean mTwoPane;
 
     @Override
     public void onCreate()
@@ -76,7 +88,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
                 tracks = args.getParcelableArrayList(PlayTrackActivityFragment.TRACKS);
                 trackNumber = args.getInt(PlayTrackActivityFragment.TRACK_NUMBER);
 
-                if (tracks.get(trackNumber) != null)
+                if (tracks != null && tracks.get(trackNumber) != null)
                 {
                     track = tracks.get(trackNumber);
                 }
@@ -90,6 +102,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     {
         Bundle returnBundle = new Bundle();
         playTrackResultReceiver.send(NOTIFY_MP_PREPARED, returnBundle);
+        createNotification();
 
         mediaPlayer.start();
     }
@@ -116,6 +129,81 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnErrorListener(this);
         mediaPlayer.setOnCompletionListener(this);
+    }
+
+    public void createNotification()
+    {
+        // Create explicit intent for our Activity
+        Intent resultIntent;
+        if (mTwoPane)
+        {
+            resultIntent = new Intent(getApplicationContext(), ArtistSearchActivity.class);
+        } else
+        {
+            resultIntent = new Intent(getApplicationContext(), PlayTrackActivity.class);
+        }
+
+        // Fill intent with necessary data
+        resultIntent.putParcelableArrayListExtra(PlayTrackActivityFragment.TRACKS, tracks);
+        resultIntent.putExtra(PlayTrackActivityFragment.TRACK_NUMBER, trackNumber);
+
+
+//resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        // The stack builder object will contain an artificial back stack for the
+        // started Activity.
+        // This ensures that navigating backward from the Activity leads out of
+        // your application to the Home screen.
+//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+//        // Adds the back stack for the Intent (but not the Intent itself)
+//        if(mTwoPane){
+//            stackBuilder.addParentStack(ArtistSearchActivity.class);
+//        } else {
+//        stackBuilder.addParentStack(PlayTrackActivity.class);
+//        }
+//        // Adds the Intent that starts the Activity to the top of the stack
+//        stackBuilder.addNextIntent(resultIntent);
+//
+//
+//        PendingIntent resultPendingIntent =
+//                stackBuilder.getPendingIntent(
+//                        0,
+//                        PendingIntent.FLAG_UPDATE_CURRENT
+//                );
+
+
+//        NotificationManager mNotificationManager =
+//                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//
+//        // mId allows you to update the notification later on.
+//        mNotificationManager.notify(0, builder.build());
+
+        // Create pending intent and include the intent
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // Use a remote view to have our own custom notification layout
+        RemoteViews remoteView = new RemoteViews(getPackageName(), R.layout.notifications);
+        remoteView.setTextViewText(R.id.notification_track_name, track.getName());
+
+        // Create a notification with the app icon,
+        // the remote view and the pending intent
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(getApplicationContext())
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContent(remoteView)
+                        .setContentIntent(resultPendingIntent);
+
+        // build the notification
+        Notification notification = builder.build();
+
+        // Include image in the remote view with the right id
+        Picasso.with(getApplicationContext())
+                .load(track.getUrl_large())
+                .into(remoteView, R.id.notification_thumbnail, NOTIFICATION_ID, notification);
+
+        // start foreground service with the right id and the notification
+        startForeground(NOTIFICATION_ID, notification);
     }
 
     public boolean checkIfSameTrack(Bundle args)
