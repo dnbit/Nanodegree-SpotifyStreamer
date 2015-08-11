@@ -115,7 +115,7 @@ public class PlayTrackActivityFragment extends DialogFragment
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
     {
-        inflater.inflate(R.menu.menu_play_track_fragment, menu);
+        inflater.inflate(R.menu.common_share_action_provider, menu);
 
         // Retrieve the share menu item
         MenuItem menuItem = menu.findItem(R.id.action_share);

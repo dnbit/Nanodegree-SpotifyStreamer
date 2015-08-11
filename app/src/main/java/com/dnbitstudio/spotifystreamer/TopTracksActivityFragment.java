@@ -53,6 +53,8 @@ public class TopTracksActivityFragment extends Fragment
     public static final String ARTIST_ID = "artistID";
     public static final String ARTIST_NAME = "artistName";
     public static final String IS_SHARE_VISIBLE = "isSharedVisible";
+    public static final String IS_NOW_PLAYING_VISIBLE = "is_now_playing";
+    public static final String POSITION = "position_key";
     String artistName;
 
     private TopTracksAdapter adapter;
@@ -74,6 +76,9 @@ public class TopTracksActivityFragment extends Fragment
     public static final int MIN_IMAGE_SIZE_SMALL = 200;
     public static final int MIN_IMAGE_SIZE_LARGE = 640;
     private boolean isShareVisible = false;
+    private boolean isNowPlayingVisible = false;
+    private MenuItem menuNowPlaying;
+    private int position;
 
     public TopTracksActivityFragment()
     {
@@ -118,6 +123,8 @@ public class TopTracksActivityFragment extends Fragment
             }
 
             isShareVisible = savedInstanceState.getBoolean(IS_SHARE_VISIBLE);
+            isNowPlayingVisible = savedInstanceState.getBoolean(IS_NOW_PLAYING_VISIBLE);
+            position = savedInstanceState.getInt(POSITION);
         }
 
         listView.setAdapter(adapter);
@@ -127,6 +134,8 @@ public class TopTracksActivityFragment extends Fragment
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
+                setPosition(position);
+                isNowPlayingVisible = true;
                 if (mTwoPane)
                 {
                     isShareVisible = true;
@@ -165,18 +174,47 @@ public class TopTracksActivityFragment extends Fragment
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
     {
-        inflater.inflate(R.menu.menu_play_track_fragment, menu);
+        inflater.inflate(R.menu.common_now_playing, menu);
+        inflater.inflate(R.menu.common_share_action_provider, menu);
 
         // Retrieve the share menu item
-        MenuItem menuItem = menu.findItem(R.id.action_share);
+        MenuItem menuShareItem = menu.findItem(R.id.action_share);
+        menuNowPlaying = menu.findItem(R.id.now_playing);
 
         if (!isShareVisible)
         {
-            menuItem.setVisible(false);
+            menuShareItem.setVisible(false);
+        }
+
+        // make it visible on tablet layout
+        if (isNowPlayingVisible)
+        {
+            menuNowPlaying.setVisible(true);
         }
 
         // Get the provider to a field
-        shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+        shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuShareItem);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if (item.getItemId() == R.id.now_playing)
+        {
+            setNowPlaying();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        // make it visible on phone layout
+        if (isNowPlayingVisible && menuNowPlaying != null)
+        {
+            menuNowPlaying.setVisible(true);
+        }
     }
 
     @Override
@@ -186,6 +224,8 @@ public class TopTracksActivityFragment extends Fragment
         outState.putParcelableArrayList(CUSTOM_TRACKS_KEY, customTracks);
         outState.putBoolean(IS_QUERY_RUNNING, isQueryRunning);
         outState.putBoolean(IS_SHARE_VISIBLE, isShareVisible);
+        outState.putBoolean(IS_NOW_PLAYING_VISIBLE, isNowPlayingVisible);
+        outState.putInt(POSITION, position);
     }
 
     public void performSearch(String artistID)
@@ -338,6 +378,22 @@ public class TopTracksActivityFragment extends Fragment
 
         shareIntent.putExtra(Intent.EXTRA_TEXT, track.getPreview_url() + PlayTrackActivityFragment.TRACK_SHARE_INTENT);
         return shareIntent;
+    }
+
+    public void setPosition(int position)
+    {
+        this.position = position;
+    }
+
+    private void setNowPlaying()
+    {
+        if (mTwoPane)
+        {
+            ((ArtistSearchActivity) getActivity()).onItemSelected(customTracks, position);
+        } else
+        {
+            ((TopTracksActivity) getActivity()).onItemSelected(customTracks, position);
+        }
     }
 
     public interface TopTracksFragmentCallback
