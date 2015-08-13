@@ -9,7 +9,7 @@
         android:src="@drawable/ic_loading"
         android:layout_width="?android:listPreferredItemHeight"
         android:layout_height="?android:listPreferredItemHeight"
-        android:padding="8dp"/>
+        android:padding="4dp"/>
 
     <TextView
         android:id="@+id/notification_track_name"
@@ -17,5 +17,40 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="center_vertical"
-        style="@android:style/TextAppearance.Small.Inverse"/>
+        style="@style/TextAppearance.StatusBar.EventContent"/>
+
+    <Button
+        android:id="@+id/btn_notification_previous"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="4dp"
+        android:layout_gravity="center_vertical"
+        android:background="@android:drawable/ic_media_previous"/>
+
+    <Button
+        android:id="@+id/btn_notification_pause"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="4dp"
+        android:layout_gravity="center_vertical"
+        android:background="@android:drawable/ic_media_pause"/>
+
+    <Button
+        android:id="@+id/btn_notification_play"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="4dp"
+        android:layout_gravity="center_vertical"
+        android:background="@android:drawable/ic_media_play"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/btn_notification_next"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="4dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_gravity="center_vertical"
+        android:background="@android:drawable/ic_media_next"/>
 </LinearLayout>

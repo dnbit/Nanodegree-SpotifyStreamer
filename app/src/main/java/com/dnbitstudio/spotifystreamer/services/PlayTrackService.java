@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.ResultReceiver;
 import android.support.v4.app.NotificationCompat;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import com.dnbitstudio.spotifystreamer.ArtistSearchActivity;
@@ -45,6 +46,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     private ResultReceiver playTrackResultReceiver;
     private boolean trackCompleted = false;
     private boolean sameTrack = false;
+    private boolean fromNotification = false;
     @BindBool(R.bool.sw600)
     boolean mTwoPane;
 
@@ -74,23 +76,50 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     {
         if (intent != null)
         {
-            // set the receiver every time onStartCommand is called
-            // to ensure we use the fragment which is actually
-            // associated with our activity
-            playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
-
-            Bundle args = intent.getBundleExtra(ARGS_BUNDLE);
-            if (args != null && args.size() > 0)
+            String action = intent.getAction();
+            if (action != null)
             {
-                boolean same = checkIfSameTrack(args);
-                setSameTrack(same);
-
-                tracks = args.getParcelableArrayList(PlayTrackActivityFragment.TRACKS);
-                trackNumber = args.getInt(PlayTrackActivityFragment.TRACK_NUMBER);
-
-                if (tracks != null && tracks.get(trackNumber) != null)
+                fromNotification = true;
+                switch (action)
                 {
-                    track = tracks.get(trackNumber);
+                    case "call_previous":
+                        playPrevious();
+                        break;
+                    case "call_pause":
+                        pause();
+                        createNotification();
+                        break;
+                    case "call_play":
+                        restartTrack();
+                        createNotification();
+                        break;
+                    case "call_next":
+                        playNext();
+                        break;
+                    default:
+                        break;
+                }
+            } else
+            {
+                fromNotification = false;
+                // set the receiver every time onStartCommand is called
+                // to ensure we use the fragment which is actually
+                // associated with our activity
+                playTrackResultReceiver = intent.getParcelableExtra(RECEIVER_TAG);
+
+                Bundle args = intent.getBundleExtra(ARGS_BUNDLE);
+                if (args != null && args.size() > 0)
+                {
+                    boolean same = checkIfSameTrack(args);
+                    setSameTrack(same);
+
+                    tracks = args.getParcelableArrayList(PlayTrackActivityFragment.TRACKS);
+                    trackNumber = args.getInt(PlayTrackActivityFragment.TRACK_NUMBER);
+
+                    if (tracks != null && tracks.get(trackNumber) != null)
+                    {
+                        track = tracks.get(trackNumber);
+                    }
                 }
             }
         }
@@ -100,8 +129,11 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     @Override
     public void onPrepared(MediaPlayer mediaPlayer)
     {
-        Bundle returnBundle = new Bundle();
-        playTrackResultReceiver.send(NOTIFY_MP_PREPARED, returnBundle);
+        if (!fromNotification)
+        {
+            Bundle returnBundle = new Bundle();
+            playTrackResultReceiver.send(NOTIFY_MP_PREPARED, returnBundle);
+        }
         createNotification();
 
         mediaPlayer.start();
@@ -118,8 +150,11 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     public void onCompletion(MediaPlayer mp)
     {
         setTrackCompleted(true);
-        Bundle returnBundle = new Bundle();
-        playTrackResultReceiver.send(NOTIFY_TRACK_COMPLETED, returnBundle);
+        if (!fromNotification)
+        {
+            Bundle returnBundle = new Bundle();
+            playTrackResultReceiver.send(NOTIFY_TRACK_COMPLETED, returnBundle);
+        }
     }
 
     public void initMediaPlayer()
@@ -182,9 +217,44 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        Intent intentPrevious = new Intent(getApplicationContext(), PlayTrackService.class);
+        intentPrevious.setAction("call_previous");
+        PendingIntent playPreviousPendingIntent =
+                PendingIntent.getService(getApplicationContext(), 0, intentPrevious, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent intentPause = new Intent(getApplicationContext(), PlayTrackService.class);
+        intentPause.setAction("call_pause");
+        PendingIntent pausePendingIntent =
+                PendingIntent.getService(getApplicationContext(), 0, intentPause, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent intentPlay = new Intent(getApplicationContext(), PlayTrackService.class);
+        intentPlay.setAction("call_play");
+        PendingIntent playPendingIntent =
+                PendingIntent.getService(getApplicationContext(), 0, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent intentNext = new Intent(getApplicationContext(), PlayTrackService.class);
+        intentNext.setAction("call_next");
+        PendingIntent playNextPendingIntent =
+                PendingIntent.getService(getApplicationContext(), 0, intentNext, PendingIntent.FLAG_UPDATE_CURRENT);
+
         // Use a remote view to have our own custom notification layout
         RemoteViews remoteView = new RemoteViews(getPackageName(), R.layout.notifications);
         remoteView.setTextViewText(R.id.notification_track_name, track.getName());
+
+        if (fromNotification && !isPlaying())
+        {
+            remoteView.setViewVisibility(R.id.btn_notification_pause, View.GONE);
+            remoteView.setViewVisibility(R.id.btn_notification_play, View.VISIBLE);
+        } else
+        {
+            remoteView.setViewVisibility(R.id.btn_notification_play, View.GONE);
+            remoteView.setViewVisibility(R.id.btn_notification_pause, View.VISIBLE);
+        }
+
+        remoteView.setOnClickPendingIntent(R.id.btn_notification_previous, playPreviousPendingIntent);
+        remoteView.setOnClickPendingIntent(R.id.btn_notification_pause, pausePendingIntent);
+        remoteView.setOnClickPendingIntent(R.id.btn_notification_play, playPendingIntent);
+        remoteView.setOnClickPendingIntent(R.id.btn_notification_next, playNextPendingIntent);
 
         // Create a notification with the app icon,
         // the remote view and the pending intent
@@ -233,7 +303,8 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         try
         {
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(tracks.get(trackNumber).getPreview_url());
+            track = tracks.get(trackNumber);
+            mediaPlayer.setDataSource(track.getPreview_url());
 
             // if we are playing a new track then it is not the same track
             setSameTrack(false);
