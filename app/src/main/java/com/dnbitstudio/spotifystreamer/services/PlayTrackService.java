@@ -87,11 +87,11 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
                         break;
                     case "call_pause":
                         pause();
-                        createNotification();
+                        createNotification(true);
                         break;
                     case "call_play":
                         restartTrack();
-                        createNotification();
+                        createNotification(false);
                         break;
                     case "call_next":
                         playNext();
@@ -134,7 +134,10 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
             Bundle returnBundle = new Bundle();
             playTrackResultReceiver.send(NOTIFY_MP_PREPARED, returnBundle);
         }
-        createNotification();
+
+        // This is a new track so we want the play button
+        // not to be visible on the notification
+        createNotification(false);
 
         mediaPlayer.start();
     }
@@ -166,7 +169,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         mediaPlayer.setOnCompletionListener(this);
     }
 
-    public void createNotification()
+    public void createNotification(boolean forcePlayVisible)
     {
         // Create explicit intent for our Activity
         Intent resultIntent;
@@ -241,7 +244,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         RemoteViews remoteView = new RemoteViews(getPackageName(), R.layout.notifications);
         remoteView.setTextViewText(R.id.notification_track_name, track.getName());
 
-        if (fromNotification && !isPlaying())
+        if (forcePlayVisible && !isPlaying())
         {
             remoteView.setViewVisibility(R.id.btn_notification_pause, View.GONE);
             remoteView.setViewVisibility(R.id.btn_notification_play, View.VISIBLE);
