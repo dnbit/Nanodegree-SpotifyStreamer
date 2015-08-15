@@ -10,9 +10,9 @@
         android:entries="@array/pref_country_options"/>
 
     <CheckBoxPreference
-        android:title="Controls on notification"
-        android:key="controls"
+        android:title="@string/pref_controls_label"
+        android:key="@string/pref_controls_key"
         android:defaultValue="true"
-        android:summaryOn="Enabled"
-        android:summaryOff="Disabled"/>
+        android:summaryOn="@string/pref_controls_summary_on_label"
+        android:summaryOff="@string/pref_controls_summary_off_label"/>
 </PreferenceScreen>

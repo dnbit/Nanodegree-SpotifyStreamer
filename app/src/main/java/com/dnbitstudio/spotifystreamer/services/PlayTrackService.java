@@ -52,6 +52,11 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     @BindBool(R.bool.sw600)
     boolean mTwoPane;
     private boolean visibleControls;
+    public static final String ACTION_CALL_PREVIOUS = "call_previous";
+    public static final String ACTION_PAUSE = "call_pause";
+    public static final String ACTION_CALL_PLAY = "call_play";
+    public static final String ACTION_CALL_NEXT = "call_next";
+    public static final String ACTION_TOGGLE_CONTROLS_VISIBILITY = "toggle_controls_visibility";
 
     @Override
     public void onCreate()
@@ -78,7 +83,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     public int onStartCommand(Intent intent, int flags, int startId)
     {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        visibleControls = sharedPreferences.getBoolean("controls", true);
+        visibleControls = sharedPreferences.getBoolean(getString(R.string.pref_controls_key), true);
 
         if (intent != null)
         {
@@ -88,21 +93,21 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
                 fromNotification = true;
                 switch (action)
                 {
-                    case "call_previous":
+                    case ACTION_CALL_PREVIOUS:
                         playPrevious();
                         break;
-                    case "call_pause":
+                    case ACTION_PAUSE:
                         pause();
                         createNotification(true);
                         break;
-                    case "call_play":
+                    case ACTION_CALL_PLAY:
                         restartTrack();
                         createNotification(false);
                         break;
-                    case "call_next":
+                    case ACTION_CALL_NEXT:
                         playNext();
                         break;
-                    case "toggle_controls_visibility":
+                    case ACTION_TOGGLE_CONTROLS_VISIBILITY:
                         createNotification(false);
                         break;
                     default:

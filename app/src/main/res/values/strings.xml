@@ -39,4 +39,9 @@
     <string name="pref_country_united_kingdom" translatable="false">GB</string>
     <string name="pref_country_united_states_america" translatable="false">US</string>
 
+    <string name="pref_controls_label">Controls on notification</string>
+    <string name="pref_controls_key" translatable="false">controls</string>
+    <string name="pref_controls_summary_on_label">Enabled</string>
+    <string name="pref_controls_summary_off_label">Disabled</string>
+
 </resources>

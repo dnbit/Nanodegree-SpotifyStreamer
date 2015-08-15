@@ -91,7 +91,7 @@ public class SettingsActivity extends PreferenceActivity
             if (CommonHelper.isMyServiceRunning(PlayTrackService.class, getApplicationContext()))
             {
                 Intent intent = new Intent(getApplicationContext(), PlayTrackService.class);
-                intent.setAction("toggle_controls_visibility");
+                intent.setAction(PlayTrackService.ACTION_TOGGLE_CONTROLS_VISIBILITY);
                 startService(intent);
             }
         }
