@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.ResultReceiver;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -49,6 +51,7 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     private boolean fromNotification = false;
     @BindBool(R.bool.sw600)
     boolean mTwoPane;
+    private boolean visibleControls;
 
     @Override
     public void onCreate()
@@ -74,6 +77,9 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        visibleControls = sharedPreferences.getBoolean("controls", true);
+
         if (intent != null)
         {
             String action = intent.getAction();
@@ -95,6 +101,9 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
                         break;
                     case "call_next":
                         playNext();
+                        break;
+                    case "toggle_controls_visibility":
+                        createNotification(false);
                         break;
                     default:
                         break;
@@ -220,6 +229,41 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        // Use a remote view to have our own custom notification layout
+        RemoteViews remoteView = new RemoteViews(getPackageName(), R.layout.notifications);
+        remoteView.setTextViewText(R.id.notification_track_name, track.getName());
+
+        // Set controls if they are visible
+        if (visibleControls)
+        {
+            setNotificationControls(remoteView, forcePlayVisible);
+        } else
+        {
+            hideNotificationButtons(remoteView);
+        }
+
+        // Create a notification with the app icon,
+        // the remote view and the pending intent
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(getApplicationContext())
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContent(remoteView)
+                        .setContentIntent(resultPendingIntent);
+
+        // build the notification
+        Notification notification = builder.build();
+
+        // Include image in the remote view with the right id
+        Picasso.with(getApplicationContext())
+                .load(track.getUrl_large())
+                .into(remoteView, R.id.notification_thumbnail, NOTIFICATION_ID, notification);
+
+        // start foreground service with the right id and the notification
+        startForeground(NOTIFICATION_ID, notification);
+    }
+
+    public void setNotificationControls(RemoteViews remoteView, boolean forcePlayVisible)
+    {
         Intent intentPrevious = new Intent(getApplicationContext(), PlayTrackService.class);
         intentPrevious.setAction("call_previous");
         PendingIntent playPreviousPendingIntent =
@@ -240,9 +284,10 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
         PendingIntent playNextPendingIntent =
                 PendingIntent.getService(getApplicationContext(), 0, intentNext, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Use a remote view to have our own custom notification layout
-        RemoteViews remoteView = new RemoteViews(getPackageName(), R.layout.notifications);
-        remoteView.setTextViewText(R.id.notification_track_name, track.getName());
+        remoteView.setOnClickPendingIntent(R.id.btn_notification_previous, playPreviousPendingIntent);
+        remoteView.setOnClickPendingIntent(R.id.btn_notification_pause, pausePendingIntent);
+        remoteView.setOnClickPendingIntent(R.id.btn_notification_play, playPendingIntent);
+        remoteView.setOnClickPendingIntent(R.id.btn_notification_next, playNextPendingIntent);
 
         if (forcePlayVisible && !isPlaying())
         {
@@ -254,29 +299,16 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
             remoteView.setViewVisibility(R.id.btn_notification_pause, View.VISIBLE);
         }
 
-        remoteView.setOnClickPendingIntent(R.id.btn_notification_previous, playPreviousPendingIntent);
-        remoteView.setOnClickPendingIntent(R.id.btn_notification_pause, pausePendingIntent);
-        remoteView.setOnClickPendingIntent(R.id.btn_notification_play, playPendingIntent);
-        remoteView.setOnClickPendingIntent(R.id.btn_notification_next, playNextPendingIntent);
+        remoteView.setViewVisibility(R.id.btn_notification_previous, View.VISIBLE);
+        remoteView.setViewVisibility(R.id.btn_notification_next, View.VISIBLE);
+    }
 
-        // Create a notification with the app icon,
-        // the remote view and the pending intent
-        NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(getApplicationContext())
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContent(remoteView)
-                        .setContentIntent(resultPendingIntent);
-
-        // build the notification
-        Notification notification = builder.build();
-
-        // Include image in the remote view with the right id
-        Picasso.with(getApplicationContext())
-                .load(track.getUrl_large())
-                .into(remoteView, R.id.notification_thumbnail, NOTIFICATION_ID, notification);
-
-        // start foreground service with the right id and the notification
-        startForeground(NOTIFICATION_ID, notification);
+    public void hideNotificationButtons(RemoteViews remoteView)
+    {
+        remoteView.setViewVisibility(R.id.btn_notification_previous, View.GONE);
+        remoteView.setViewVisibility(R.id.btn_notification_play, View.GONE);
+        remoteView.setViewVisibility(R.id.btn_notification_pause, View.GONE);
+        remoteView.setViewVisibility(R.id.btn_notification_next, View.GONE);
     }
 
     public boolean checkIfSameTrack(Bundle args)

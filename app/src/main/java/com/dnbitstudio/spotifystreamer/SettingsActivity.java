@@ -1,10 +1,14 @@
 package com.dnbitstudio.spotifystreamer;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+
+import com.dnbitstudio.spotifystreamer.services.PlayTrackService;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings.
@@ -30,6 +34,7 @@ public class SettingsActivity extends PreferenceActivity
         // updated when the preference changes.
         //noinspection deprecation
         bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_country_key)));
+        bindPreferenceSummaryToValue(findPreference("controls"));
     }
 
     /**
@@ -44,10 +49,19 @@ public class SettingsActivity extends PreferenceActivity
 
         // Trigger the listener immediately with the preference's
         // current value.
-        onPreferenceChange(preference,
-                PreferenceManager
-                        .getDefaultSharedPreferences(preference.getContext())
-                        .getString(preference.getKey(), ""));
+        if (preference instanceof ListPreference)
+        {
+            onPreferenceChange(preference,
+                    PreferenceManager
+                            .getDefaultSharedPreferences(preference.getContext())
+                            .getString(preference.getKey(), ""));
+        } else if (preference instanceof CheckBoxPreference)
+        {
+            onPreferenceChange(preference,
+                    PreferenceManager
+                            .getDefaultSharedPreferences(preference.getContext())
+                            .getBoolean(preference.getKey(), true));
+        }
     }
 
     @Override
@@ -70,6 +84,18 @@ public class SettingsActivity extends PreferenceActivity
             // For other preferences, set the summary to the value's simple string representation.
             preference.setSummary(stringValue);
         }
+
+        if (preference instanceof CheckBoxPreference)
+        {
+            // update notification controls visibility if service is running
+            if (CommonHelper.isMyServiceRunning(PlayTrackService.class, getApplicationContext()))
+            {
+                Intent intent = new Intent(getApplicationContext(), PlayTrackService.class);
+                intent.setAction("toggle_controls_visibility");
+                startService(intent);
+            }
+        }
+
         return true;
     }
 }

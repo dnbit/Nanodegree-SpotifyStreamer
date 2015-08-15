@@ -1,5 +1,6 @@
 package com.dnbitstudio.spotifystreamer;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -23,7 +24,6 @@ public class CommonHelper
         return netInfo != null && netInfo.isConnected();
     }
 
-
     public static String getImageURL(List<Image> images, int minWidth)
     {
         int size = images.size();
@@ -41,5 +41,19 @@ public class CommonHelper
             }
         }
         return null;
+    }
+
+    // Method to know if a given service is running
+    public static boolean isMyServiceRunning(Class<?> serviceClass, Context context)
+    {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE))
+        {
+            if (serviceClass.getName().equals(service.service.getClassName()))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
