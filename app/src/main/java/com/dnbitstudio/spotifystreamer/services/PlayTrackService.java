@@ -270,22 +270,22 @@ public class PlayTrackService extends Service implements MediaPlayer.OnPreparedL
     public void setNotificationControls(RemoteViews remoteView, boolean forcePlayVisible)
     {
         Intent intentPrevious = new Intent(getApplicationContext(), PlayTrackService.class);
-        intentPrevious.setAction("call_previous");
+        intentPrevious.setAction(ACTION_CALL_PREVIOUS);
         PendingIntent playPreviousPendingIntent =
                 PendingIntent.getService(getApplicationContext(), 0, intentPrevious, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent intentPause = new Intent(getApplicationContext(), PlayTrackService.class);
-        intentPause.setAction("call_pause");
+        intentPause.setAction(ACTION_PAUSE);
         PendingIntent pausePendingIntent =
                 PendingIntent.getService(getApplicationContext(), 0, intentPause, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent intentPlay = new Intent(getApplicationContext(), PlayTrackService.class);
-        intentPlay.setAction("call_play");
+        intentPlay.setAction(ACTION_CALL_PLAY);
         PendingIntent playPendingIntent =
                 PendingIntent.getService(getApplicationContext(), 0, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent intentNext = new Intent(getApplicationContext(), PlayTrackService.class);
-        intentNext.setAction("call_next");
+        intentNext.setAction(ACTION_CALL_NEXT);
         PendingIntent playNextPendingIntent =
                 PendingIntent.getService(getApplicationContext(), 0, intentNext, PendingIntent.FLAG_UPDATE_CURRENT);
 
