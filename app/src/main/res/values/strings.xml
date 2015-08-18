@@ -43,5 +43,6 @@
     <string name="pref_controls_key" translatable="false">controls</string>
     <string name="pref_controls_summary_on_label">Enabled</string>
     <string name="pref_controls_summary_off_label">Disabled</string>
+    <string name="now_playing">Now Playing</string>
 
 </resources>
